@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
+/* Force light mode regardless of OS preference — we don't ship a dark theme. */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a; /* slate-900 */
+  color-scheme: light;
 }
 
 @theme inline {
@@ -12,15 +14,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Slightly darker placeholders so they don't fade into nothing on white. */
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8; /* slate-400 */
 }

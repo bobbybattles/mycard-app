@@ -57,8 +57,8 @@ export default async function DashboardPage() {
     <main className="flex-1 px-6 py-10 bg-slate-50">
       <div className="mx-auto max-w-3xl space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Your media kit</h1>
-          <p className="mt-1 text-slate-600">
+          <h1 className="text-2xl font-bold text-slate-900">Your media kit</h1>
+          <p className="mt-1 text-slate-700">
             Live at{" "}
             <Link
               href={`/${profile.username}`}
