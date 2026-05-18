@@ -1,9 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import ProfileCard from "@/components/cards/profile-card";
+import type { ProfileCardData } from "@/components/cards/profile-card-editor";
 
 // Public kit page rendered at mycard.to/<username>.
 // Server-rendered for speed + SEO. RLS keeps unpublished kits 404 to outsiders.
+export const dynamic = "force-dynamic";
+
 export default async function PublicKitPage({
   params,
 }: {
@@ -14,7 +18,7 @@ export default async function PublicKitPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, display_name")
+    .select("id, username")
     .eq("username", username.toLowerCase())
     .maybeSingle();
 
@@ -35,28 +39,20 @@ export default async function PublicKitPage({
     .eq("is_visible", true)
     .order("position", { ascending: true });
 
+  const profileCard = cards?.find((c) => c.card_type === "profile");
+  const otherCards = (cards ?? []).filter((c) => c.card_type !== "profile");
+
   return (
     <main className="flex-1 bg-gradient-to-b from-pink-50 to-white">
       <div className="mx-auto max-w-2xl px-6 py-16">
-        <header className="text-center">
-          <div className="mx-auto h-24 w-24 rounded-full bg-pink-100 flex items-center justify-center text-3xl font-bold text-pink-600">
-            {(profile.display_name || profile.username)[0]?.toUpperCase()}
-          </div>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight">
-            {profile.display_name || `@${profile.username}`}
-          </h1>
-          <p className="mt-1 text-sm font-mono text-slate-500">
-            mycard.to/{profile.username}
-          </p>
-        </header>
+        <ProfileCard
+          username={profile.username}
+          data={(profileCard?.data ?? {}) as ProfileCardData}
+        />
 
-        <div className="mt-10 space-y-4">
-          {(cards ?? []).length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-6 py-12 text-center text-slate-500">
-              This kit is just getting started.
-            </div>
-          ) : (
-            (cards ?? []).map((card) => (
+        {otherCards.length > 0 && (
+          <div className="mt-10 space-y-4">
+            {otherCards.map((card) => (
               <div
                 key={card.id}
                 className="rounded-xl border border-slate-200 bg-white px-6 py-5 shadow-sm"
@@ -68,9 +64,9 @@ export default async function PublicKitPage({
                   {JSON.stringify(card.data, null, 2)}
                 </pre>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
         <footer className="mt-16 text-center text-xs text-slate-400">
           <p>

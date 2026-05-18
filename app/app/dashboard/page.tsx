@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import ProfileCardEditor, {
+  type ProfileCardData,
+} from "@/components/cards/profile-card-editor";
 
 // Main dashboard.
 // If the user hasn't picked a username yet, send them to onboarding first.
@@ -19,34 +22,82 @@ export default async function DashboardPage() {
 
   if (!profile?.username) redirect("/app/onboarding");
 
-  return (
-    <main className="flex-1 px-6 py-10">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="text-2xl font-bold">Your media kit</h1>
-        <p className="mt-1 text-slate-600">
-          Live at{" "}
-          <a
-            href={`/${profile.username}`}
-            target="_blank"
-            rel="noreferrer"
-            className="font-mono text-pink-600 hover:underline"
-          >
-            mycard.to/{profile.username}
-          </a>
-        </p>
+  // Find this user's kit + existing profile card (if any).
+  const { data: kit } = await supabase
+    .from("kits")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
 
-        <div className="mt-8 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
-          <p className="text-slate-600">
-            Card editor is coming next. For now your kit shows your handle and a
-            placeholder profile card. Phase 1 of the build.
+  // Defensive: the on_auth_user_created trigger normally creates the kit
+  // automatically, but if it somehow didn't, the editor would have nowhere
+  // to write — bail to a friendly message rather than crashing.
+  if (!kit) {
+    return (
+      <main className="flex-1 px-6 py-10">
+        <div className="mx-auto max-w-3xl">
+          <h1 className="text-2xl font-bold">Hmm, your kit isn&apos;t set up.</h1>
+          <p className="mt-2 text-slate-600">
+            Refresh the page or sign out and back in. If this keeps happening,
+            reach out to support.
           </p>
+        </div>
+      </main>
+    );
+  }
+
+  const { data: profileCard } = await supabase
+    .from("cards")
+    .select("id, data, is_visible")
+    .eq("kit_id", kit.id)
+    .eq("card_type", "profile")
+    .maybeSingle();
+
+  return (
+    <main className="flex-1 px-6 py-10 bg-slate-50">
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Your media kit</h1>
+          <p className="mt-1 text-slate-600">
+            Live at{" "}
+            <Link
+              href={`/${profile.username}`}
+              target="_blank"
+              className="font-mono text-pink-600 hover:underline"
+            >
+              mycard.to/{profile.username}
+            </Link>
+          </p>
+        </div>
+
+        <ProfileCardEditor
+          userId={user.id}
+          kitId={kit.id}
+          card={
+            profileCard
+              ? {
+                  id: profileCard.id,
+                  data: (profileCard.data ?? {}) as ProfileCardData,
+                  is_visible: profileCard.is_visible,
+                }
+              : null
+          }
+        />
+
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+          <p className="text-slate-500 text-sm">
+            More cards coming next: socials, performance metrics, portfolio, rate
+            card, and contact.
+          </p>
+        </div>
+
+        <div className="text-center">
           <Link
             href={`/${profile.username}`}
             target="_blank"
-            rel="noreferrer"
-            className="mt-4 inline-block rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700"
+            className="inline-block rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
           >
-            View my kit
+            View my public kit →
           </Link>
         </div>
       </div>
