@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import ProfileCard from "@/components/cards/profile-card";
 import type { ProfileCardData } from "@/components/cards/profile-card-editor";
+import MetricsCard from "@/components/cards/metrics-card";
+import { hasAnyMetric, type MetricsCardData } from "@/lib/metrics-schema";
 
 // Public kit page rendered at mycard.to/<username>.
 // Server-rendered for speed + SEO. RLS keeps unpublished kits 404 to outsiders.
@@ -40,7 +42,11 @@ export default async function PublicKitPage({
     .order("position", { ascending: true });
 
   const profileCard = cards?.find((c) => c.card_type === "profile");
-  const otherCards = (cards ?? []).filter((c) => c.card_type !== "profile");
+  const metricsCard = cards?.find((c) => c.card_type === "metrics");
+  const knownTypes = new Set(["profile", "metrics"]);
+  const unknownCards = (cards ?? []).filter((c) => !knownTypes.has(c.card_type));
+
+  const metricsData = (metricsCard?.data ?? {}) as MetricsCardData;
 
   return (
     <main className="flex-1 bg-gradient-to-b from-pink-50 to-white">
@@ -50,9 +56,15 @@ export default async function PublicKitPage({
           data={(profileCard?.data ?? {}) as ProfileCardData}
         />
 
-        {otherCards.length > 0 && (
+        {hasAnyMetric(metricsData) && (
+          <div className="mt-10">
+            <MetricsCard data={metricsData} />
+          </div>
+        )}
+
+        {unknownCards.length > 0 && (
           <div className="mt-10 space-y-4">
-            {otherCards.map((card) => (
+            {unknownCards.map((card) => (
               <div
                 key={card.id}
                 className="rounded-xl border border-slate-200 bg-white px-6 py-5 shadow-sm"

@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import ProfileCardEditor, {
   type ProfileCardData,
 } from "@/components/cards/profile-card-editor";
+import MetricsCardEditor from "@/components/cards/metrics-card-editor";
+import type { MetricsCardData } from "@/lib/metrics-schema";
 
 // Main dashboard.
 // If the user hasn't picked a username yet, send them to onboarding first.
@@ -22,22 +24,20 @@ export default async function DashboardPage() {
 
   if (!profile?.username) redirect("/app/onboarding");
 
-  // Find this user's kit + existing profile card (if any).
   const { data: kit } = await supabase
     .from("kits")
     .select("id")
     .eq("user_id", user.id)
     .single();
 
-  // Defensive: the on_auth_user_created trigger normally creates the kit
-  // automatically, but if it somehow didn't, the editor would have nowhere
-  // to write — bail to a friendly message rather than crashing.
   if (!kit) {
     return (
       <main className="flex-1 px-6 py-10">
         <div className="mx-auto max-w-3xl">
-          <h1 className="text-2xl font-bold">Hmm, your kit isn&apos;t set up.</h1>
-          <p className="mt-2 text-slate-600">
+          <h1 className="text-2xl font-bold text-slate-900">
+            Hmm, your kit isn&apos;t set up.
+          </h1>
+          <p className="mt-2 text-slate-700">
             Refresh the page or sign out and back in. If this keeps happening,
             reach out to support.
           </p>
@@ -46,12 +46,24 @@ export default async function DashboardPage() {
     );
   }
 
-  const { data: profileCard } = await supabase
-    .from("cards")
-    .select("id, data, is_visible")
-    .eq("kit_id", kit.id)
-    .eq("card_type", "profile")
-    .maybeSingle();
+  // Load both the profile card and the metrics card in parallel.
+  const [profileCardRes, metricsCardRes] = await Promise.all([
+    supabase
+      .from("cards")
+      .select("id, data, is_visible")
+      .eq("kit_id", kit.id)
+      .eq("card_type", "profile")
+      .maybeSingle(),
+    supabase
+      .from("cards")
+      .select("id, data, is_visible")
+      .eq("kit_id", kit.id)
+      .eq("card_type", "metrics")
+      .maybeSingle(),
+  ]);
+
+  const profileCard = profileCardRes.data;
+  const metricsCard = metricsCardRes.data;
 
   return (
     <main className="flex-1 px-6 py-10 bg-slate-50">
@@ -84,10 +96,22 @@ export default async function DashboardPage() {
           }
         />
 
+        <MetricsCardEditor
+          kitId={kit.id}
+          card={
+            metricsCard
+              ? {
+                  id: metricsCard.id,
+                  data: (metricsCard.data ?? {}) as MetricsCardData,
+                  is_visible: metricsCard.is_visible,
+                }
+              : null
+          }
+        />
+
         <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
           <p className="text-slate-500 text-sm">
-            More cards coming next: socials, performance metrics, portfolio, rate
-            card, and contact.
+            More cards coming next: socials, portfolio, brand collabs, rate card, and contact.
           </p>
         </div>
 

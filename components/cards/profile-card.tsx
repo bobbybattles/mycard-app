@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { ProfileCardData } from "./profile-card-editor";
+import StarEmblem, { LEVEL_LABELS } from "./star-emblem";
 
 type Props = {
   username: string;
@@ -30,7 +31,9 @@ export default function ProfileCard({ username, data }: Props) {
         )}
       </div>
 
-      <h1 className="mt-4 text-3xl font-bold tracking-tight">{displayName}</h1>
+      <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900">
+        {displayName}
+      </h1>
 
       <p className="mt-1 text-sm font-mono text-slate-500">
         mycard.to/{username}
@@ -46,6 +49,15 @@ export default function ProfileCard({ username, data }: Props) {
         <p className="mt-4 mx-auto max-w-md text-base text-slate-700 leading-relaxed">
           {data.bio}
         </p>
+      )}
+
+      {data.star_level && (
+        <div className="mt-5 inline-flex flex-col items-center">
+          <StarEmblem level={data.star_level} size={72} />
+          <span className="mt-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700">
+            {LEVEL_LABELS[data.star_level]} Creator
+          </span>
+        </div>
       )}
     </header>
   );
