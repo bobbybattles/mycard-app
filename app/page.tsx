@@ -9,7 +9,7 @@ export default async function HomePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (user) redirect("/app/dashboard");
+  if (user) redirect("/app/kits");
 
   return (
     <main className="flex-1">

@@ -58,16 +58,22 @@ export default function UsernamePicker({
 
     setAvailability({ state: "checking" });
     const handle = setTimeout(async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("username", trimmed)
-        .maybeSingle();
-      if (error) {
-        setAvailability({ state: "invalid", reason: error.message });
+      // Username is also the user's first kit slug, so we have to check
+      // both profiles.username AND kits.slug for collisions.
+      const [profileLookup, slugLookup] = await Promise.all([
+        supabase.from("profiles").select("id").eq("username", trimmed).maybeSingle(),
+        supabase.from("kits").select("id").eq("slug", trimmed).maybeSingle(),
+      ]);
+      if (profileLookup.error) {
+        setAvailability({ state: "invalid", reason: profileLookup.error.message });
         return;
       }
-      setAvailability({ state: data ? "taken" : "available" });
+      if (slugLookup.error) {
+        setAvailability({ state: "invalid", reason: slugLookup.error.message });
+        return;
+      }
+      const taken = !!profileLookup.data || !!slugLookup.data;
+      setAvailability({ state: taken ? "taken" : "available" });
     }, 350);
     return () => clearTimeout(handle);
   }, [value, supabase]);
@@ -86,12 +92,19 @@ export default function UsernamePicker({
         setSubmitError("You're not signed in anymore — try signing in again.");
         return;
       }
-      const { error } = await supabase
-        .from("profiles")
-        .update({ username: trimmed })
-        .eq("id", user.id);
+      // Set BOTH the account-level username AND the user's first kit's
+      // slug + name. The on_auth_user_created trigger pre-created an empty
+      // kit row at signup; we just fill it in here.
+      const [profileRes, kitRes] = await Promise.all([
+        supabase.from("profiles").update({ username: trimmed }).eq("id", user.id),
+        supabase
+          .from("kits")
+          .update({ slug: trimmed, name: "My media kit" })
+          .eq("user_id", user.id)
+          .is("slug", null),
+      ]);
+      const error = profileRes.error || kitRes.error;
       if (error) {
-        // Most likely cause: race on uniqueness, or the DB-side check constraint.
         setSubmitError(
           error.code === "23505"
             ? "Someone just took that one. Try another."
@@ -99,7 +112,7 @@ export default function UsernamePicker({
         );
         return;
       }
-      router.push("/app/dashboard");
+      router.push("/app/kits");
       router.refresh();
     });
   }

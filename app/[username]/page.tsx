@@ -10,8 +10,10 @@ import type { PortfolioCardData } from "@/components/cards/portfolio-card-editor
 import PlatformLinks from "@/components/cards/platform-links";
 import type { LinksCardData, ProfileLink } from "@/lib/links";
 
-// Public kit page rendered at mycard.to/<username>.
-// Server-rendered for speed + SEO. RLS keeps unpublished kits 404 to outsiders.
+// Public kit page rendered at mycard.to/<slug>.
+// Each kit has its own slug — a user can have many kits, one URL per kit.
+// Path param is named [username] for backward-compat with the original
+// schema; here it's just the kit slug.
 export const dynamic = "force-dynamic";
 
 export default async function PublicKitPage({
@@ -20,20 +22,14 @@ export default async function PublicKitPage({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
+  const slug = username.toLowerCase();
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, username")
-    .eq("username", username.toLowerCase())
-    .maybeSingle();
-
-  if (!profile) return notFound();
-
+  // Look up the kit by slug.
   const { data: kit } = await supabase
     .from("kits")
-    .select("id, theme, is_published")
-    .eq("user_id", profile.id)
+    .select("id, user_id, slug, is_published, theme")
+    .eq("slug", slug)
     .maybeSingle();
 
   if (!kit || !kit.is_published) return notFound();
@@ -82,8 +78,8 @@ export default async function PublicKitPage({
     <main className="flex-1 bg-gradient-to-b from-pink-50 to-white">
       <div className="mx-auto max-w-7xl px-6 py-16">
         <ProfileCard
-          username={profile.username}
-          data={(profileCard?.data ?? {}) as ProfileCardData}
+          username={kit.slug ?? slug}
+          data={profileData}
         />
 
         {hasAnyMetric(metricsData) && (
