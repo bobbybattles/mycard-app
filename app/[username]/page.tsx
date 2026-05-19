@@ -92,16 +92,16 @@ export default async function PublicKitPage({
           </div>
         )}
 
-        {((portfolioData.groups && portfolioData.groups.length > 0) ||
-          (portfolioData.videos && portfolioData.videos.length > 0)) && (
+        {resolvedLinks.length > 0 && (
           <div className="mt-12">
-            <PortfolioCard data={portfolioData} />
+            <PlatformLinks links={resolvedLinks} />
           </div>
         )}
 
-        {resolvedLinks.length > 0 && (
+        {((portfolioData.groups && portfolioData.groups.length > 0) ||
+          (portfolioData.videos && portfolioData.videos.length > 0)) && (
           <div className="mt-14">
-            <PlatformLinks links={resolvedLinks} />
+            <PortfolioCard data={portfolioData} />
           </div>
         )}
 
