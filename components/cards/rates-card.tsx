@@ -1,4 +1,4 @@
-import type { RatesCardData } from "@/lib/rates";
+import { formatRateAmount, type RatesCardData } from "@/lib/rates";
 
 type Props = {
   data: RatesCardData;
@@ -37,7 +37,7 @@ export default function RatesCard({
 
   return (
     <section className={className}>
-      <h2 className={headingClassName}>Rates</h2>
+      <h2 className={headingClassName}>Content Creation Rates</h2>
       <div className={dividerClassName}>
         {items.map((item) => (
           <div
@@ -60,7 +60,7 @@ export default function RatesCard({
               <p
                 className={`shrink-0 text-right text-sm sm:text-base font-bold whitespace-nowrap ${amountClassName}`}
               >
-                {item.amount}
+                {formatRateAmount(item.amount)}
               </p>
             )}
           </div>
