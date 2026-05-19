@@ -53,78 +53,81 @@ export default function SunsetLayout({
           "linear-gradient(135deg, #fed7aa 0%, #fda4af 35%, #f0abfc 70%, #fde68a 100%)",
       }}
     >
-      <div className="mx-auto max-w-6xl px-6 py-14">
-        {/* Profile — asymmetric: photo + name on left, info on right */}
-        <section className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-8 items-end">
-          <div>
-            <div className="relative aspect-square rounded-[2rem] overflow-hidden bg-orange-200 shadow-2xl ring-4 ring-white/70">
+      <div className="mx-auto max-w-5xl px-6 py-10">
+        {/* Profile — compact horizontal card */}
+        <section className="rounded-3xl bg-white/60 backdrop-blur px-5 py-5 sm:px-7 sm:py-6 shadow-xl">
+          <div className="flex flex-row items-start gap-4 sm:gap-6">
+            <div className="relative h-24 w-24 sm:h-36 sm:w-36 shrink-0 rounded-2xl overflow-hidden bg-orange-200 shadow-lg ring-2 ring-white/70">
               {profileData.photo_url ? (
                 <Image
                   src={profileData.photo_url}
                   alt={displayName}
                   fill
-                  sizes="(min-width: 768px) 260px, 100vw"
+                  sizes="(min-width: 640px) 144px, 96px"
                   className="object-cover"
                   unoptimized
                   priority
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-6xl font-black text-orange-600">
+                <div className="absolute inset-0 flex items-center justify-center text-4xl font-black text-orange-600">
                   {initial}
                 </div>
               )}
             </div>
-          </div>
-          <div>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.95] text-orange-950">
-              {displayName}
-            </h1>
-            {profileData.star_level && (
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-2 shadow">
-                <StarEmblem level={profileData.star_level} size={28} />
-                <span className="text-xs font-bold uppercase tracking-wider text-orange-900">
-                  {LEVEL_LABELS[profileData.star_level]} Creator
-                </span>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tighter leading-[1] text-orange-950">
+                  {displayName}
+                </h1>
+                {profileData.star_level && (
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-white/70 backdrop-blur px-2.5 py-1 shadow-sm">
+                    <StarEmblem level={profileData.star_level} size={18} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-orange-900">
+                      {LEVEL_LABELS[profileData.star_level]}
+                    </span>
+                  </div>
+                )}
               </div>
-            )}
-            {profileData.amazon_storefront ? (
-              <div className="mt-4">
+
+              {profileData.amazon_storefront ? (
                 <a
                   href={profileData.amazon_storefront}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block text-sm font-mono font-bold text-orange-800 hover:text-orange-950 underline underline-offset-4 decoration-orange-400 decoration-2"
+                  className="mt-1 inline-block text-xs sm:text-sm font-mono font-bold text-orange-800 hover:text-orange-950 underline underline-offset-4 decoration-orange-400 decoration-2 break-all"
                 >
                   {prettyUrl(profileData.amazon_storefront)}
                 </a>
-              </div>
-            ) : (
-              <p className="mt-4 text-sm font-mono text-orange-800">
-                mycard.to/{slug}
-              </p>
-            )}
-            {profileData.bio && (
-              <p className="mt-5 text-lg leading-relaxed font-medium text-orange-950/85 max-w-xl">
-                {profileData.bio}
-              </p>
-            )}
-            {profileData.email && (
-              <p className="mt-5 text-sm font-semibold">
-                <a
-                  href={`mailto:${profileData.email}`}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-1.5 hover:bg-white shadow-sm"
-                >
-                  ✉ {profileData.email}
-                </a>
-              </p>
-            )}
-            {profileData.location && (
-              <p className="mt-2 text-sm font-semibold">
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/40 backdrop-blur px-3 py-1.5">
+              ) : (
+                <p className="mt-1 text-xs sm:text-sm font-mono text-orange-800">
+                  mycard.to/{slug}
+                </p>
+              )}
+
+              {profileData.bio && (
+                <p className="mt-2 text-sm leading-relaxed font-medium text-orange-950/85">
+                  {profileData.bio}
+                </p>
+              )}
+
+              {profileData.email && (
+                <p className="mt-3 text-xs sm:text-sm font-semibold">
+                  <a
+                    href={`mailto:${profileData.email}`}
+                    className="text-orange-900 hover:text-orange-950 underline underline-offset-4 break-all"
+                  >
+                    ✉ {profileData.email}
+                  </a>
+                </p>
+              )}
+
+              {profileData.location && (
+                <p className="mt-1 text-xs sm:text-sm font-semibold text-orange-900/80">
                   📍 {profileData.location}
-                </span>
-              </p>
-            )}
+                </p>
+              )}
+            </div>
           </div>
         </section>
 

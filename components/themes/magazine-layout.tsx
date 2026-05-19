@@ -47,79 +47,86 @@ export default function MagazineLayout({
 
   return (
     <main className="flex-1 bg-amber-50 font-sans text-slate-900">
-      {/* Hero — split layout, editorial */}
+      {/* Hero — compact editorial card */}
       <section className="border-b-4 border-slate-900">
-        <div className="mx-auto max-w-6xl px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-          <div className="aspect-[4/5] relative bg-slate-900 overflow-hidden">
-            {profileData.photo_url ? (
-              <Image
-                src={profileData.photo_url}
-                alt={displayName}
-                fill
-                sizes="(min-width: 768px) 50vw, 100vw"
-                className="object-cover"
-                unoptimized
-                priority
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-amber-200 text-9xl font-serif">
-                {initial}
+        <div className="mx-auto max-w-5xl px-6 py-8">
+          <p className="text-[10px] uppercase tracking-[0.4em] text-slate-600 font-semibold mb-3">
+            Media Kit · No. 01
+          </p>
+          <div className="flex flex-row items-start gap-4 sm:gap-6">
+            <div className="relative h-28 w-24 sm:h-40 sm:w-32 shrink-0 bg-slate-900 overflow-hidden">
+              {profileData.photo_url ? (
+                <Image
+                  src={profileData.photo_url}
+                  alt={displayName}
+                  fill
+                  sizes="(min-width: 640px) 128px, 96px"
+                  className="object-cover"
+                  unoptimized
+                  priority
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-amber-200 text-5xl font-serif">
+                  {initial}
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl leading-[0.95] font-black tracking-tight">
+                  {displayName}
+                </h1>
+                {profileData.star_level && (
+                  <div className="inline-flex items-center gap-1.5 border-2 border-slate-900 px-2 py-1">
+                    <StarEmblem level={profileData.star_level} size={18} />
+                    <span className="text-[10px] uppercase tracking-widest font-bold">
+                      {LEVEL_LABELS[profileData.star_level]}
+                    </span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-600 font-semibold mb-3">
-              Media Kit · No. 01
-            </p>
-            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl leading-[0.95] font-black tracking-tight">
-              {displayName}
-            </h1>
-            {profileData.star_level && (
-              <div className="mt-4 inline-flex items-center gap-3 border-2 border-slate-900 px-3 py-2">
-                <StarEmblem level={profileData.star_level} size={32} />
-                <span className="text-xs uppercase tracking-widest font-bold">
-                  {LEVEL_LABELS[profileData.star_level]} Creator
-                </span>
-              </div>
-            )}
-            {profileData.amazon_storefront ? (
-              <div className="mt-4">
+
+              {profileData.amazon_storefront ? (
                 <a
                   href={profileData.amazon_storefront}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block text-sm font-mono text-slate-700 hover:text-slate-900 underline underline-offset-4 decoration-2"
+                  className="mt-1 inline-block text-xs sm:text-sm font-mono text-slate-700 hover:text-slate-900 underline underline-offset-4 decoration-2 break-all"
                 >
                   {prettyUrl(profileData.amazon_storefront)}
                 </a>
-              </div>
-            ) : (
-              <p className="mt-4 text-sm font-mono text-slate-700">
-                mycard.to/{slug}
-              </p>
-            )}
-            {profileData.bio && (
-              <p className="mt-6 text-lg leading-relaxed text-slate-800 font-serif">
-                {profileData.bio}
-              </p>
-            )}
-            {profileData.email && (
-              <p className="mt-6 text-sm">
-                <a
-                  href={`mailto:${profileData.email}`}
-                  className="inline-flex items-center gap-2 underline underline-offset-4"
-                >
-                  ✉ {profileData.email}
-                </a>
-              </p>
-            )}
-            {profileData.location && (
-              <p className="mt-2 text-sm">
-                <span className="inline-flex items-center gap-2 text-slate-700">
-                  📍 {profileData.location}
-                </span>
-              </p>
-            )}
+              ) : (
+                <p className="mt-1 text-xs sm:text-sm font-mono text-slate-700">
+                  mycard.to/{slug}
+                </p>
+              )}
+
+              {profileData.bio && (
+                <p className="mt-2 text-sm sm:text-base leading-relaxed text-slate-800 font-serif">
+                  {profileData.bio}
+                </p>
+              )}
+
+              {profileData.email && (
+                <p className="mt-3 text-xs sm:text-sm">
+                  <a
+                    href={`mailto:${profileData.email}`}
+                    className="inline-flex items-center gap-2 underline underline-offset-4 break-all"
+                  >
+                    ✉ {profileData.email}
+                  </a>
+                </p>
+              )}
+
+              {profileData.location && (
+                <p className="mt-1 text-xs sm:text-sm">
+                  <span className="inline-flex items-center gap-2 text-slate-700">
+                    📍 {profileData.location}
+                  </span>
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </section>

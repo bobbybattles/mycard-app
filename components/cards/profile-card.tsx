@@ -19,87 +19,86 @@ function prettifyUrl(url: string): string {
 // Public render of the Profile card on mycard.to/<username>.
 // Server-rendered for speed + SEO.
 //
-// Field order (per Fizz, 2026-05-18):
-//   1. Photo
-//   2. Display name (or @username)
-//   3. Shop URL — Amazon storefront if set, otherwise mycard.to/<username>
-//   4. Creator Star Level emblem
-//   5. Bio
-//   6. Location
+// Compact horizontal layout (Fizz, 2026-05-19):
+//   Photo on the left, name + star + url + bio + email + location stacked
+//   tightly in a right column. Keeps the whole profile above the fold.
 export default function ProfileCard({ username, data }: Props) {
   const displayName = data.name || `@${username}`;
   const initial = (data.name?.[0] ?? username[0] ?? "?").toUpperCase();
 
   return (
-    <header className="mx-auto max-w-md text-center">
-      <div className="relative mx-auto h-28 w-28 rounded-full overflow-hidden bg-pink-100 flex items-center justify-center text-4xl font-bold text-pink-600 ring-4 ring-white shadow-sm">
-        {data.photo_url ? (
-          <Image
-            src={data.photo_url}
-            alt={displayName}
-            fill
-            sizes="112px"
-            className="object-cover"
-            unoptimized
-            priority
-          />
-        ) : (
-          initial
-        )}
-      </div>
-
-      <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900">
-        {displayName}
-      </h1>
-
-      {data.star_level && (
-        <div className="mt-3 flex flex-col items-center">
-          <StarEmblem level={data.star_level} size={72} />
-          <span className="mt-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700">
-            {LEVEL_LABELS[data.star_level]} Creator
-          </span>
+    <header className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white px-5 py-5 sm:px-7 sm:py-6 shadow-sm">
+      <div className="flex flex-row items-start gap-4 sm:gap-6">
+        <div className="relative h-24 w-24 sm:h-32 sm:w-32 shrink-0 rounded-2xl overflow-hidden bg-pink-100 flex items-center justify-center text-3xl font-bold text-pink-600 ring-2 ring-white shadow-sm">
+          {data.photo_url ? (
+            <Image
+              src={data.photo_url}
+              alt={displayName}
+              fill
+              sizes="(min-width: 640px) 128px, 96px"
+              className="object-cover"
+              unoptimized
+              priority
+            />
+          ) : (
+            initial
+          )}
         </div>
-      )}
 
-      {data.amazon_storefront ? (
-        <p className="mt-3">
-          <a
-            href={data.amazon_storefront}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-mono text-pink-600 hover:text-pink-700 hover:underline"
-          >
-            {prettifyUrl(data.amazon_storefront)}
-          </a>
-        </p>
-      ) : (
-        <p className="mt-3 text-sm font-mono text-slate-500">
-          mycard.to/{username}
-        </p>
-      )}
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
+              {displayName}
+            </h1>
+            {data.star_level && (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-pink-50 border border-pink-200 px-2.5 py-1">
+                <StarEmblem level={data.star_level} size={18} />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-pink-700">
+                  {LEVEL_LABELS[data.star_level]}
+                </span>
+              </div>
+            )}
+          </div>
 
-      {data.bio && (
-        <p className="mt-5 mx-auto max-w-md text-base text-slate-700 leading-relaxed">
-          {data.bio}
-        </p>
-      )}
+          {data.amazon_storefront ? (
+            <a
+              href={data.amazon_storefront}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-block text-xs sm:text-sm font-mono text-pink-600 hover:text-pink-700 hover:underline break-all"
+            >
+              {prettifyUrl(data.amazon_storefront)}
+            </a>
+          ) : (
+            <p className="mt-1 text-xs sm:text-sm font-mono text-slate-500">
+              mycard.to/{username}
+            </p>
+          )}
 
-      {data.email && (
-        <p className="mt-4 text-sm">
-          <a
-            href={`mailto:${data.email}`}
-            className="text-pink-600 hover:text-pink-700 hover:underline"
-          >
-            {data.email}
-          </a>
-        </p>
-      )}
+          {data.bio && (
+            <p className="mt-2 text-sm text-slate-700 leading-relaxed">
+              {data.bio}
+            </p>
+          )}
 
-      {data.location && (
-        <p className="mt-3 text-sm text-slate-600">
-          {data.location}
-        </p>
-      )}
+          {data.email && (
+            <p className="mt-3 text-xs sm:text-sm">
+              <a
+                href={`mailto:${data.email}`}
+                className="text-pink-600 hover:text-pink-700 hover:underline break-all"
+              >
+                ✉ {data.email}
+              </a>
+            </p>
+          )}
+
+          {data.location && (
+            <p className="mt-1 text-xs sm:text-sm text-slate-600">
+              📍 {data.location}
+            </p>
+          )}
+        </div>
+      </div>
     </header>
   );
 }

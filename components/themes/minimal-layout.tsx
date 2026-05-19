@@ -47,65 +47,76 @@ export default function MinimalLayout({
 
   return (
     <main className="flex-1 bg-white text-slate-900">
-      {/* Profile — small photo, big name, thin dividers */}
-      <section className="mx-auto max-w-3xl px-6 pt-20 pb-12 text-center">
-        <div className="relative mx-auto h-20 w-20 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center text-2xl font-light text-slate-600">
-          {profileData.photo_url ? (
-            <Image
-              src={profileData.photo_url}
-              alt={displayName}
-              fill
-              sizes="80px"
-              className="object-cover"
-              unoptimized
-              priority
-            />
-          ) : (
-            initial
-          )}
+      {/* Profile — compact horizontal card */}
+      <section className="mx-auto max-w-3xl px-6 pt-10 pb-8">
+        <div className="flex flex-row items-start gap-4 sm:gap-6">
+          <div className="relative h-20 w-20 sm:h-28 sm:w-28 shrink-0 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center text-2xl font-light text-slate-600">
+            {profileData.photo_url ? (
+              <Image
+                src={profileData.photo_url}
+                alt={displayName}
+                fill
+                sizes="(min-width: 640px) 112px, 80px"
+                className="object-cover"
+                unoptimized
+                priority
+              />
+            ) : (
+              initial
+            )}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extralight tracking-tight">
+                {displayName}
+              </h1>
+              {profileData.star_level && (
+                <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                  {LEVEL_LABELS[profileData.star_level]} Creator
+                </span>
+              )}
+            </div>
+
+            {profileData.amazon_storefront ? (
+              <a
+                href={profileData.amazon_storefront}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-block text-[10px] sm:text-xs font-mono uppercase tracking-[0.3em] text-slate-500 hover:text-slate-900 break-all"
+              >
+                {prettyUrl(profileData.amazon_storefront)}
+              </a>
+            ) : (
+              <p className="mt-1 text-[10px] sm:text-xs font-mono uppercase tracking-[0.3em] text-slate-500">
+                mycard.to/{slug}
+              </p>
+            )}
+
+            {profileData.bio && (
+              <p className="mt-3 text-sm leading-relaxed text-slate-700 font-light">
+                {profileData.bio}
+              </p>
+            )}
+
+            {profileData.email && (
+              <p className="mt-3 text-[10px] sm:text-xs uppercase tracking-[0.25em]">
+                <a
+                  href={`mailto:${profileData.email}`}
+                  className="text-slate-500 hover:text-slate-900 break-all"
+                >
+                  {profileData.email}
+                </a>
+              </p>
+            )}
+
+            {profileData.location && (
+              <p className="mt-1 text-[10px] sm:text-xs uppercase tracking-[0.25em] text-slate-500">
+                {profileData.location}
+              </p>
+            )}
+          </div>
         </div>
-        <h1 className="mt-8 text-5xl sm:text-6xl font-extralight tracking-tight">
-          {displayName}
-        </h1>
-        {profileData.star_level && (
-          <p className="mt-5 text-xs uppercase tracking-[0.4em] text-slate-500">
-            {LEVEL_LABELS[profileData.star_level]} Creator
-          </p>
-        )}
-        {profileData.amazon_storefront ? (
-          <a
-            href={profileData.amazon_storefront}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-block text-xs font-mono uppercase tracking-[0.3em] text-slate-500 hover:text-slate-900"
-          >
-            {prettyUrl(profileData.amazon_storefront)}
-          </a>
-        ) : (
-          <p className="mt-4 text-xs font-mono uppercase tracking-[0.3em] text-slate-500">
-            mycard.to/{slug}
-          </p>
-        )}
-        {profileData.bio && (
-          <p className="mt-8 mx-auto max-w-lg text-base leading-relaxed text-slate-700 font-light">
-            {profileData.bio}
-          </p>
-        )}
-        {profileData.email && (
-          <p className="mt-8 text-xs uppercase tracking-[0.25em]">
-            <a
-              href={`mailto:${profileData.email}`}
-              className="text-slate-500 hover:text-slate-900"
-            >
-              {profileData.email}
-            </a>
-          </p>
-        )}
-        {profileData.location && (
-          <p className="mt-2 text-xs uppercase tracking-[0.25em] text-slate-500">
-            {profileData.location}
-          </p>
-        )}
       </section>
 
       {/* Performance — one block per platform group, huge numbers + hairlines */}
