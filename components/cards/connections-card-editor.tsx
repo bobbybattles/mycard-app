@@ -53,8 +53,9 @@ export default function ConnectionsCardEditor({
     return () => clearTimeout(t);
   }, [saveStatus]);
 
-  const usedTypes = new Set(links.map((l) => l.type));
-  const availableTypes = LINK_TYPE_ORDER.filter((t) => !usedTypes.has(t));
+  // All options are always available — users often have multiple channels
+  // on the same platform (e.g. two YouTube channels) and need to add each.
+  const availableTypes = LINK_TYPE_ORDER;
 
   function addLink(type: LinkType) {
     setLinks((prev) => [...prev, { id: randomId(), type, label: "", url: "" }]);
@@ -221,11 +222,7 @@ export default function ConnectionsCardEditor({
       </div>
 
       <div className="mt-3">
-        {availableTypes.length === 0 ? (
-          <p className="text-xs text-slate-500 italic px-1">
-            All options added. Remove one above to add another.
-          </p>
-        ) : showPicker ? (
+        {showPicker ? (
           <div className="rounded-lg border border-dashed border-slate-300 p-3">
             <p className="text-xs text-slate-600 mb-2 font-medium">Pick one</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

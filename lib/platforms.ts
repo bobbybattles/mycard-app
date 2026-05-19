@@ -65,8 +65,8 @@ export const PLATFORMS: Record<Platform, PlatformConfig> = {
   },
   amazon_shop: {
     id: "amazon_shop",
-    label: "Amazon Shop",
-    shortLabel: "Amazon",
+    label: "Amazon Storefront",
+    shortLabel: "Amazon Storefront",
     color: "#FF9900",
     gradient: { from: "#FFB84D", to: "#FF9900" },
     canEmbed: false,
