@@ -118,29 +118,22 @@ export default function PortfolioCardEditor({ kitId, card }: Props) {
     const data: PortfolioCardData = { videos };
 
     startSave(async () => {
-      if (card) {
-        const { error } = await supabase
-          .from("cards")
-          .update({ data, is_visible: true })
-          .eq("id", card.id);
-        if (error) {
-          setSaveStatus("error");
-          setSaveError(error.message);
-          return;
-        }
-      } else {
-        const { error } = await supabase.from("cards").insert({
+      // Upsert on the (kit_id, card_type) unique constraint so we never
+      // create a duplicate row if the editor's view of "card exists" is stale.
+      const { error } = await supabase.from("cards").upsert(
+        {
           kit_id: kitId,
           card_type: "portfolio",
           position: 20, // After profile (0) and metrics (10).
           is_visible: true,
           data,
-        });
-        if (error) {
-          setSaveStatus("error");
-          setSaveError(error.message);
-          return;
-        }
+        },
+        { onConflict: "kit_id,card_type" }
+      );
+      if (error) {
+        setSaveStatus("error");
+        setSaveError(error.message);
+        return;
       }
       setSaveStatus("saved");
     });

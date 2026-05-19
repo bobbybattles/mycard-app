@@ -10,6 +10,10 @@ import PortfolioCardEditor, {
   type PortfolioCardData,
 } from "@/components/cards/portfolio-card-editor";
 
+// Always re-fetch on every request so a save followed by a refresh shows the
+// freshly persisted data, not a stale cached render.
+export const dynamic = "force-dynamic";
+
 // Main dashboard.
 // If the user hasn't picked a username yet, send them to onboarding first.
 export default async function DashboardPage() {

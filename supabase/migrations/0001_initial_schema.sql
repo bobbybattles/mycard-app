@@ -65,6 +65,19 @@ create table if not exists public.cards (
 create index if not exists cards_kit_position_idx
   on public.cards (kit_id, position);
 
+-- One card row per (kit, card_type). Lets us safely upsert from the editor
+-- without ever creating duplicate rows if the client's view of "card exists"
+-- gets out of sync.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'cards_kit_card_type_unique'
+  ) then
+    alter table public.cards
+      add constraint cards_kit_card_type_unique unique (kit_id, card_type);
+  end if;
+end$$;
+
 -- =============================================================================
 -- updated_at trigger — keeps the column fresh on every UPDATE.
 -- =============================================================================

@@ -115,31 +115,20 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
     };
 
     startSave(async () => {
-      if (card) {
-        const { error } = await supabase
-          .from("cards")
-          .update({ data, is_visible: true })
-          .eq("id", card.id);
-        if (error) {
-          setSaveStatus("error");
-          setSaveError(error.message);
-          return;
-        }
-      } else {
-        const { error } = await supabase
-          .from("cards")
-          .insert({
-            kit_id: kitId,
-            card_type: "profile",
-            position: 0,
-            is_visible: true,
-            data,
-          });
-        if (error) {
-          setSaveStatus("error");
-          setSaveError(error.message);
-          return;
-        }
+      const { error } = await supabase.from("cards").upsert(
+        {
+          kit_id: kitId,
+          card_type: "profile",
+          position: 0,
+          is_visible: true,
+          data,
+        },
+        { onConflict: "kit_id,card_type" }
+      );
+      if (error) {
+        setSaveStatus("error");
+        setSaveError(error.message);
+        return;
       }
       setSaveStatus("saved");
     });
