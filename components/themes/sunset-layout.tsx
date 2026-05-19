@@ -149,7 +149,7 @@ export default function SunsetLayout({
                       </p>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="flex flex-wrap justify-center gap-5">
                     {visibleSections.map((section) => {
                       const sectionData = getSectionMetrics(groupData, section.id) ?? {};
                       const filled = section.metrics.filter(
@@ -158,7 +158,7 @@ export default function SunsetLayout({
                       return (
                         <div
                           key={section.id}
-                          className="rounded-3xl bg-orange-50/80 backdrop-blur p-5 shadow-xl"
+                          className="basis-[280px] grow max-w-md rounded-3xl bg-orange-50/80 backdrop-blur p-5 shadow-xl"
                         >
                           <h4 className="text-sm font-black uppercase tracking-wider text-orange-900 pb-3 border-b border-orange-200">
                             {section.title}

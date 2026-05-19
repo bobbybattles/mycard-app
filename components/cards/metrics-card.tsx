@@ -70,7 +70,7 @@ function PlatformGroupBlock({
           return (
             <div
               key={section.id}
-              className="flex-1 min-w-[280px] rounded-xl border border-slate-200 bg-white px-6 py-5 shadow-sm"
+              className="basis-[280px] grow max-w-md rounded-xl border border-slate-200 bg-white px-6 py-5 shadow-sm"
             >
               <h3 className="text-sm font-bold uppercase tracking-wide text-slate-900 pb-3 border-b border-slate-200">
                 {section.title}

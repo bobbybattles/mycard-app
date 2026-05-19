@@ -163,7 +163,7 @@ export default function NeonLayout({
                       <p className="mt-1 text-sm text-slate-400">{groupData.timeframe}</p>
                     )}
                   </header>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="flex flex-wrap justify-center gap-5">
                     {visibleSections.map((section) => {
                       const sectionData = getSectionMetrics(groupData, section.id) ?? {};
                       const filled = section.metrics.filter(
@@ -172,7 +172,7 @@ export default function NeonLayout({
                       return (
                         <div
                           key={section.id}
-                          className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 shadow-2xl"
+                          className="basis-[280px] grow max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 shadow-2xl"
                         >
                           <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-300 pb-3 border-b border-white/10">
                             {section.title}
