@@ -59,6 +59,11 @@ export async function GET(request: NextRequest) {
     return fetchTikTokOembed(target);
   }
 
+  // Instagram: scrape OG tags from the public post/reel page.
+  if (/(^|\.)instagram\.com$/.test(host)) {
+    return fetchInstagramOg(target);
+  }
+
   // Amazon: scrape Open Graph meta tags out of the page HTML.
   if (/(^|\.)amazon\./.test(host) || /^amzn\.to$/.test(host)) {
     return fetchAmazonOg(target);
@@ -101,6 +106,53 @@ async function fetchTikTokOembed(target: string) {
       { error: (err as Error).message ?? "Fetch failed" },
       { status: 502 }
     );
+  }
+}
+
+// Instagram public posts / reels: scrape og:image + og:title.
+// Instagram aggressively blocks scrapers; falls back to nulls gracefully so
+// the inline embed iframe still renders even without a thumbnail.
+async function fetchInstagramOg(target: string) {
+  try {
+    const res = await fetch(target, {
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+      },
+      redirect: "follow",
+      next: { revalidate: 86400 },
+    });
+    if (!res.ok) {
+      return NextResponse.json({
+        title: null,
+        thumbnail: null,
+        hls: null,
+      });
+    }
+    const head = (await res.text()).slice(0, 250_000);
+    const thumbnail =
+      meta(head, "og:image:secure_url") || meta(head, "og:image") || null;
+    let title =
+      meta(head, "og:title") ||
+      meta(head, "og:description") ||
+      head.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim() ||
+      null;
+    if (title) {
+      // Strip Instagram's "@user on Instagram: \"caption\"" wrapper down to caption.
+      const m = title.match(/on Instagram:\s*["“](.+?)["”]/i);
+      if (m) title = m[1];
+      title = title.replace(/\s+•\s+Instagram(?:\s+(?:photos|videos)?.*)?$/i, "");
+      if (title.length > 200) title = title.slice(0, 197) + "…";
+    }
+    return NextResponse.json({
+      title: title || null,
+      thumbnail: thumbnail || null,
+      hls: null,
+    });
+  } catch {
+    return NextResponse.json({ title: null, thumbnail: null, hls: null });
   }
 }
 

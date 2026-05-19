@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   detectVideoSource,
+  extractInstagramShortcode,
   extractTikTokId,
   extractYouTubeId,
   fetchVideoMeta,
+  getInstagramEmbedUrl,
   getTikTokEmbedUrl,
   getYouTubeEmbedUrl,
   getYouTubeThumbnail,
@@ -39,16 +41,24 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
   const platform = detectPlatform(url);
   const ytId = source === "youtube" ? extractYouTubeId(url) : null;
   const tiktokId = source === "tiktok" ? extractTikTokId(url) : null;
+  const igShortcode =
+    source === "instagram" ? extractInstagramShortcode(url) : null;
   const builtInThumb = ytId ? getYouTubeThumbnail(ytId) : null;
 
-  // Lazy-fetch a TikTok thumbnail if the kit was saved before TikTok support
-  // shipped (so thumbnail_url is empty). Same effect for Amazon.
+  // Lazy-fetch a thumbnail when the kit was saved before scrape support shipped
+  // (so thumbnail_url is empty). Applies to TikTok, Amazon, and Instagram.
   const [resolvedThumb, setResolvedThumb] = useState<string | null>(
     thumbnailUrl || builtInThumb || null
   );
   useEffect(() => {
     if (resolvedThumb) return;
-    if (source !== "tiktok" && source !== "amazon") return;
+    if (
+      source !== "tiktok" &&
+      source !== "amazon" &&
+      source !== "instagram"
+    ) {
+      return;
+    }
     let cancelled = false;
     (async () => {
       const meta = await fetchVideoMeta(url);
@@ -60,7 +70,7 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
     };
   }, [resolvedThumb, source, url]);
 
-  const canPlayInline = !!(ytId || tiktokId || hlsUrl);
+  const canPlayInline = !!(ytId || tiktokId || igShortcode || hlsUrl);
   const [playing, setPlaying] = useState(false);
 
   function handleClick(e: React.MouseEvent) {
@@ -100,7 +110,17 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
             className="absolute inset-0 w-full h-full"
           />
         )}
-        {playing && !ytId && !tiktokId && hlsUrl && (
+        {playing && igShortcode && !ytId && !tiktokId && (
+          <iframe
+            src={getInstagramEmbedUrl(igShortcode)}
+            title={title}
+            allow="autoplay; encrypted-media; picture-in-picture; web-share"
+            allowFullScreen
+            scrolling="no"
+            className="absolute inset-0 w-full h-full"
+          />
+        )}
+        {playing && !ytId && !tiktokId && !igShortcode && hlsUrl && (
           <HlsPlayer src={hlsUrl} poster={resolvedThumb ?? undefined} title={title} />
         )}
         {!playing && (
@@ -138,6 +158,11 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
             {source === "tiktok" && (
               <span className="absolute top-2 left-2 rounded bg-black/60 text-white text-[10px] font-semibold uppercase px-1.5 py-0.5">
                 TikTok
+              </span>
+            )}
+            {source === "instagram" && (
+              <span className="absolute top-2 left-2 rounded bg-black/60 text-white text-[10px] font-semibold uppercase px-1.5 py-0.5">
+                Instagram
               </span>
             )}
           </>

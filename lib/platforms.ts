@@ -51,8 +51,8 @@ export const PLATFORMS: Record<Platform, PlatformConfig> = {
     shortLabel: "Instagram",
     color: "#E1306C",
     gradient: { from: "#F09433", to: "#BC1888" },
-    canEmbed: false,
-    urlHint: "instagram.com/p/... or /reel/...",
+    canEmbed: true,
+    urlHint: "instagram.com/reel/... or /p/...",
   },
   facebook: {
     id: "facebook",

@@ -4,17 +4,19 @@
 // titles from the browser without an API key. Amazon does not — so for Amazon
 // URLs we rely on a server-side scrape (/api/video-meta).
 
-export type VideoSource = "youtube" | "amazon" | "tiktok" | "other";
+export type VideoSource = "youtube" | "amazon" | "tiktok" | "instagram" | "other";
 
 const YT_RE =
   /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 const TIKTOK_RE = /tiktok\.com\/[^/]*\/?video\/(\d+)/i;
+const IG_RE = /instagram\.com\/(?:[^/]+\/)?(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/i;
 
 /** Detect the source by URL pattern. Cheap, no network. */
 export function detectVideoSource(url: string): VideoSource {
   if (!url) return "other";
   if (YT_RE.test(url)) return "youtube";
   if (TIKTOK_RE.test(url)) return "tiktok";
+  if (IG_RE.test(url)) return "instagram";
   if (/(?:^|\/\/)([a-z0-9-]+\.)?amazon\./i.test(url) || /amzn\.to\//i.test(url)) {
     return "amazon";
   }
@@ -30,6 +32,20 @@ export function extractTikTokId(url: string): string | null {
 /** Build a TikTok inline embed URL. Plays in an iframe; no SDK needed. */
 export function getTikTokEmbedUrl(videoId: string): string {
   return `https://www.tiktok.com/embed/v2/${videoId}`;
+}
+
+/** Extract the shortcode from an Instagram post / reel / IGTV URL. */
+export function extractInstagramShortcode(url: string): string | null {
+  const m = url.match(IG_RE);
+  return m ? m[1] : null;
+}
+
+/**
+ * Build an Instagram inline embed URL. Works for posts (/p), reels (/reel),
+ * and IGTV (/tv). Plays in an iframe; no SDK or token needed.
+ */
+export function getInstagramEmbedUrl(shortcode: string): string {
+  return `https://www.instagram.com/p/${shortcode}/embed/`;
 }
 
 /** Pull the 11-char video ID out of any common YouTube URL shape. */
@@ -88,7 +104,7 @@ export async function fetchVideoMeta(url: string): Promise<VideoMeta> {
     };
   }
 
-  if (source === "amazon" || source === "tiktok") {
+  if (source === "amazon" || source === "tiktok" || source === "instagram") {
     try {
       const res = await fetch(`/api/video-meta?url=${encodeURIComponent(url)}`);
       if (!res.ok) return { title: null, thumbnail: null, hls: null };
