@@ -4,19 +4,32 @@
 // titles from the browser without an API key. Amazon does not — so for Amazon
 // URLs we rely on a server-side scrape (/api/video-meta).
 
-export type VideoSource = "youtube" | "amazon" | "other";
+export type VideoSource = "youtube" | "amazon" | "tiktok" | "other";
 
 const YT_RE =
   /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+const TIKTOK_RE = /tiktok\.com\/[^/]*\/?video\/(\d+)/i;
 
 /** Detect the source by URL pattern. Cheap, no network. */
 export function detectVideoSource(url: string): VideoSource {
   if (!url) return "other";
   if (YT_RE.test(url)) return "youtube";
+  if (TIKTOK_RE.test(url)) return "tiktok";
   if (/(?:^|\/\/)([a-z0-9-]+\.)?amazon\./i.test(url) || /amzn\.to\//i.test(url)) {
     return "amazon";
   }
   return "other";
+}
+
+/** Extract the numeric video ID from a TikTok video URL. */
+export function extractTikTokId(url: string): string | null {
+  const m = url.match(TIKTOK_RE);
+  return m ? m[1] : null;
+}
+
+/** Build a TikTok inline embed URL. Plays in an iframe; no SDK needed. */
+export function getTikTokEmbedUrl(videoId: string): string {
+  return `https://www.tiktok.com/embed/v2/${videoId}`;
 }
 
 /** Pull the 11-char video ID out of any common YouTube URL shape. */
@@ -75,7 +88,7 @@ export async function fetchVideoMeta(url: string): Promise<VideoMeta> {
     };
   }
 
-  if (source === "amazon") {
+  if (source === "amazon" || source === "tiktok") {
     try {
       const res = await fetch(`/api/video-meta?url=${encodeURIComponent(url)}`);
       if (!res.ok) return { title: null, thumbnail: null, hls: null };

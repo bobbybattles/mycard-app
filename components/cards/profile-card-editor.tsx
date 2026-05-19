@@ -85,6 +85,18 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
   function removePlatformLink(id: string) {
     setPlatformLinks((prev) => prev.filter((l) => l.id !== id));
   }
+
+  function movePlatformLink(id: string, direction: "up" | "down") {
+    setPlatformLinks((prev) => {
+      const idx = prev.findIndex((l) => l.id === id);
+      if (idx === -1) return prev;
+      const swap = direction === "up" ? idx - 1 : idx + 1;
+      if (swap < 0 || swap >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[swap]] = [next[swap], next[idx]];
+      return next;
+    });
+  }
   const [photoUrl, setPhotoUrl] = useState(card?.data.photo_url ?? "");
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -349,8 +361,10 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
         </p>
 
         <div className="mt-4 space-y-2">
-          {platformLinks.map((link) => {
+          {platformLinks.map((link, idx) => {
             const cfg = PLATFORMS[link.platform];
+            const isFirst = idx === 0;
+            const isLast = idx === platformLinks.length - 1;
             return (
               <div
                 key={link.id}
@@ -379,14 +393,41 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removePlatformLink(link.id)}
-                  className="text-xs text-slate-400 hover:text-red-600 px-2 py-1 self-start"
-                  aria-label="Remove platform link"
-                >
-                  ×
-                </button>
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => movePlatformLink(link.id, "up")}
+                    disabled={isFirst}
+                    className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Move up"
+                    title="Move up"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M12 4l-8 8h5v8h6v-8h5z" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => movePlatformLink(link.id, "down")}
+                    disabled={isLast}
+                    className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Move down"
+                    title="Move down"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M12 20l8-8h-5V4H9v8H4z" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removePlatformLink(link.id)}
+                    className="text-xs text-slate-400 hover:text-red-600 px-1"
+                    aria-label="Remove platform link"
+                    title="Remove"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
             );
           })}

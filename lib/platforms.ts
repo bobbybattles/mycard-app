@@ -42,7 +42,7 @@ export const PLATFORMS: Record<Platform, PlatformConfig> = {
     shortLabel: "TikTok",
     color: "#111111",
     gradient: { from: "#25F4EE", to: "#FE2C55" },
-    canEmbed: false,
+    canEmbed: true,
     urlHint: "tiktok.com/@user/video/...",
   },
   instagram: {

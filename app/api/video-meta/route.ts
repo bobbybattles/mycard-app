@@ -46,19 +46,66 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing ?url" }, { status: 400 });
   }
 
-  // Light allowlist: only scrape Amazon hosts for now. YouTube uses oEmbed.
   let parsed: URL;
   try {
     parsed = new URL(target);
   } catch {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
-  if (!/(^|\.)amazon\./i.test(parsed.hostname) && !/amzn\.to$/i.test(parsed.hostname)) {
+  const host = parsed.hostname.toLowerCase();
+
+  // TikTok: hit its public oEmbed endpoint.
+  if (/(^|\.)tiktok\.com$/.test(host)) {
+    return fetchTikTokOembed(target);
+  }
+
+  // Amazon: scrape Open Graph meta tags out of the page HTML.
+  if (/(^|\.)amazon\./.test(host) || /^amzn\.to$/.test(host)) {
+    return fetchAmazonOg(target);
+  }
+
+  return NextResponse.json(
+    { error: "Unsupported host" },
+    { status: 400 }
+  );
+}
+
+// TikTok exposes a public oEmbed endpoint that returns JSON with title +
+// thumbnail. No API key required. Cached at the edge for a day.
+async function fetchTikTokOembed(target: string) {
+  try {
+    const res = await fetch(
+      `https://www.tiktok.com/oembed?url=${encodeURIComponent(target)}`,
+      {
+        headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+        next: { revalidate: 86400 },
+      }
+    );
+    if (!res.ok) {
+      return NextResponse.json({ error: `Upstream ${res.status}` }, { status: 502 });
+    }
+    const data = (await res.json()) as {
+      title?: string;
+      thumbnail_url?: string;
+      author_name?: string;
+    };
+    // Use the bare title; fall back to "<author>" if title is missing.
+    const title = data.title?.trim() || data.author_name?.trim() || null;
+    return NextResponse.json({
+      title,
+      thumbnail: data.thumbnail_url ?? null,
+      hls: null,
+    });
+  } catch (err) {
     return NextResponse.json(
-      { error: "Unsupported host (only Amazon URLs are scraped)" },
-      { status: 400 }
+      { error: (err as Error).message ?? "Fetch failed" },
+      { status: 502 }
     );
   }
+}
+
+// Amazon VDP / Shop pages — scrape og:image, og:video (HLS), og:title.
+async function fetchAmazonOg(target: string) {
 
   try {
     const res = await fetch(target, {

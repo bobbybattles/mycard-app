@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   detectVideoSource,
+  extractTikTokId,
   extractYouTubeId,
+  getTikTokEmbedUrl,
   getYouTubeEmbedUrl,
   getYouTubeThumbnail,
 } from "@/lib/video-utils";
@@ -26,10 +28,11 @@ type Props = {
 export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props) {
   const source = detectVideoSource(url);
   const ytId = source === "youtube" ? extractYouTubeId(url) : null;
+  const tiktokId = source === "tiktok" ? extractTikTokId(url) : null;
   const thumbnail = thumbnailUrl || (ytId ? getYouTubeThumbnail(ytId) : null);
 
   // canPlayInline = we know how to render an inline player for this URL.
-  const canPlayInline = !!(ytId || hlsUrl);
+  const canPlayInline = !!(ytId || tiktokId || hlsUrl);
   const [playing, setPlaying] = useState(false);
 
   function handleClick(e: React.MouseEvent) {
@@ -58,7 +61,16 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
             className="absolute inset-0 w-full h-full"
           />
         )}
-        {playing && !ytId && hlsUrl && (
+        {playing && tiktokId && !ytId && (
+          <iframe
+            src={getTikTokEmbedUrl(tiktokId)}
+            title={title}
+            allow="autoplay; encrypted-media; picture-in-picture; web-share"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full"
+          />
+        )}
+        {playing && !ytId && !tiktokId && hlsUrl && (
           <HlsPlayer src={hlsUrl} poster={thumbnail ?? undefined} title={title} />
         )}
         {!playing && (

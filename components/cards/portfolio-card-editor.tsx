@@ -99,6 +99,18 @@ export default function PortfolioCardEditor({ kitId, card }: Props) {
     setGroups((prev) => prev.filter((g) => g.id !== groupId));
   }
 
+  function moveGroup(groupId: string, direction: "up" | "down") {
+    setGroups((prev) => {
+      const idx = prev.findIndex((g) => g.id === groupId);
+      if (idx === -1) return prev;
+      const swap = direction === "up" ? idx - 1 : idx + 1;
+      if (swap < 0 || swap >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[swap]] = [next[swap], next[idx]];
+      return next;
+    });
+  }
+
   function updateGroupLabel(groupId: string, label: string) {
     setGroups((prev) =>
       prev.map((g) => (g.id === groupId ? { ...g, label } : g))
@@ -249,8 +261,10 @@ export default function PortfolioCardEditor({ kitId, card }: Props) {
       </div>
 
       <div className="space-y-4">
-        {groups.map((group) => {
+        {groups.map((group, groupIdx) => {
           const cfg = PLATFORMS[group.platform];
+          const isFirst = groupIdx === 0;
+          const isLast = groupIdx === groups.length - 1;
           return (
             <div
               key={group.id}
@@ -271,14 +285,40 @@ export default function PortfolioCardEditor({ kitId, card }: Props) {
                     className="mt-1 w-full text-xs text-slate-700 bg-transparent border-0 px-0 focus:outline-none focus:ring-0 placeholder:text-slate-400"
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeGroup(group.id)}
-                  className="text-xs text-slate-500 hover:text-red-600 transition px-2 py-1"
-                  aria-label="Remove group"
-                >
-                  Remove
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => moveGroup(group.id, "up")}
+                    disabled={isFirst}
+                    className="p-1.5 rounded text-slate-500 hover:bg-white hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Move group up"
+                    title="Move up"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M12 4l-8 8h5v8h6v-8h5z" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveGroup(group.id, "down")}
+                    disabled={isLast}
+                    className="p-1.5 rounded text-slate-500 hover:bg-white hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Move group down"
+                    title="Move down"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M12 20l8-8h-5V4H9v8H4z" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeGroup(group.id)}
+                    className="text-xs text-slate-500 hover:text-red-600 transition px-2 py-1"
+                    aria-label="Remove group"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">
