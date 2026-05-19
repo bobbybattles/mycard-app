@@ -12,6 +12,8 @@ import PortfolioCardEditor, {
 import ConnectionsCardEditor from "@/components/cards/connections-card-editor";
 import type { LinksCardData, ProfileLink } from "@/lib/links";
 import KitSettingsEditor from "@/components/kits/kit-settings-editor";
+import DesignPicker from "@/components/kits/design-picker";
+import { getDesign } from "@/lib/themes";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +34,7 @@ export default async function EditKitPage({
   // Look up the kit and confirm it belongs to this user (RLS will also enforce).
   const { data: kit } = await supabase
     .from("kits")
-    .select("id, user_id, slug, name")
+    .select("id, user_id, slug, name, theme")
     .eq("id", kitId)
     .maybeSingle();
 
@@ -123,6 +125,12 @@ export default async function EditKitPage({
           kitId={kit.id}
           initialName={kit.name ?? ""}
           initialSlug={kit.slug ?? ""}
+        />
+
+        <DesignPicker
+          kitId={kit.id}
+          initialDesign={getDesign(kit.theme as Record<string, unknown> | null)}
+          initialTheme={(kit.theme as Record<string, unknown>) ?? {}}
         />
 
         <ProfileCardEditor

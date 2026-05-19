@@ -9,11 +9,14 @@ import PortfolioCard from "@/components/cards/portfolio-card";
 import type { PortfolioCardData } from "@/components/cards/portfolio-card-editor";
 import PlatformLinks from "@/components/cards/platform-links";
 import type { LinksCardData, ProfileLink } from "@/lib/links";
+import { getDesign } from "@/lib/themes";
+import MagazineLayout from "@/components/themes/magazine-layout";
+import MinimalLayout from "@/components/themes/minimal-layout";
+import NeonLayout from "@/components/themes/neon-layout";
+import SunsetLayout from "@/components/themes/sunset-layout";
 
 // Public kit page rendered at mycard.to/<slug>.
-// Each kit has its own slug — a user can have many kits, one URL per kit.
-// Path param is named [username] for backward-compat with the original
-// schema; here it's just the kit slug.
+// Dispatches to one of 5 layouts based on the kit's chosen design theme.
 export const dynamic = "force-dynamic";
 
 export default async function PublicKitPage({
@@ -25,7 +28,6 @@ export default async function PublicKitPage({
   const slug = username.toLowerCase();
   const supabase = await createClient();
 
-  // Look up the kit by slug.
   const { data: kit } = await supabase
     .from("kits")
     .select("id, user_id, slug, is_published, theme")
@@ -53,9 +55,6 @@ export default async function PublicKitPage({
   const portfolioData = (portfolioCard?.data ?? { groups: [] }) as PortfolioCardData;
   const linksData = (linksCard?.data ?? { links: [] }) as LinksCardData;
 
-  // Resolve which link list to render: prefer the unified Links card; fall
-  // back to the legacy fields on the profile card so existing kits keep
-  // working until the user re-saves.
   const resolvedLinks: ProfileLink[] =
     linksData.links && linksData.links.length > 0
       ? linksData.links
@@ -74,13 +73,28 @@ export default async function PublicKitPage({
           })),
         ];
 
+  const design = getDesign(kit.theme as Record<string, unknown> | null);
+  const kitSlug = kit.slug ?? slug;
+  const layoutProps = {
+    slug: kitSlug,
+    profileData,
+    metricsData,
+    portfolioData,
+    resolvedLinks,
+  };
+
+  // Each non-classic design has its own self-contained page layout.
+  if (design === "magazine") return <MagazineLayout {...layoutProps} />;
+  if (design === "minimal") return <MinimalLayout {...layoutProps} />;
+  if (design === "neon") return <NeonLayout {...layoutProps} />;
+  if (design === "sunset") return <SunsetLayout {...layoutProps} />;
+
+  // Classic — the original look. Inline so we can keep showing unknown
+  // card_types for debugging until those get proper renderers.
   return (
     <main className="flex-1 bg-gradient-to-b from-pink-50 to-white">
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <ProfileCard
-          username={kit.slug ?? slug}
-          data={profileData}
-        />
+        <ProfileCard username={kitSlug} data={profileData} />
 
         {hasAnyMetric(metricsData) && (
           <div className="mt-12">
