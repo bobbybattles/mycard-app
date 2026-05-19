@@ -18,12 +18,20 @@ function prettifyUrl(url: string): string {
 
 // Public render of the Profile card on mycard.to/<username>.
 // Server-rendered for speed + SEO.
+//
+// Field order (per Fizz, 2026-05-18):
+//   1. Photo
+//   2. Display name (or @username)
+//   3. Shop URL — Amazon storefront if set, otherwise mycard.to/<username>
+//   4. Creator Star Level emblem
+//   5. Bio
+//   6. Location
 export default function ProfileCard({ username, data }: Props) {
   const displayName = data.name || `@${username}`;
   const initial = (data.name?.[0] ?? username[0] ?? "?").toUpperCase();
 
   return (
-    <header className="text-center">
+    <header className="mx-auto max-w-md text-center">
       <div className="relative mx-auto h-28 w-28 rounded-full overflow-hidden bg-pink-100 flex items-center justify-center text-4xl font-bold text-pink-600 ring-4 ring-white shadow-sm">
         {data.photo_url ? (
           <Image
@@ -59,18 +67,6 @@ export default function ProfileCard({ username, data }: Props) {
         </p>
       )}
 
-      {(data.niche || data.location) && (
-        <p className="mt-3 text-sm text-slate-600">
-          {[data.niche, data.location].filter(Boolean).join(" · ")}
-        </p>
-      )}
-
-      {data.bio && (
-        <p className="mt-4 mx-auto max-w-md text-base text-slate-700 leading-relaxed">
-          {data.bio}
-        </p>
-      )}
-
       {data.star_level && (
         <div className="mt-5 inline-flex flex-col items-center">
           <StarEmblem level={data.star_level} size={72} />
@@ -78,6 +74,18 @@ export default function ProfileCard({ username, data }: Props) {
             {LEVEL_LABELS[data.star_level]} Creator
           </span>
         </div>
+      )}
+
+      {data.bio && (
+        <p className="mt-5 mx-auto max-w-md text-base text-slate-700 leading-relaxed">
+          {data.bio}
+        </p>
+      )}
+
+      {data.location && (
+        <p className="mt-4 text-sm text-slate-600">
+          {data.location}
+        </p>
       )}
     </header>
   );
