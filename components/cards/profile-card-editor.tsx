@@ -33,6 +33,8 @@ export type ProfileCardData = {
   email?: string;
   location?: string;
   star_level?: StarLevel;
+  /** Only true if the user's Amazon Storefront shows the "Top Creator" badge. */
+  top_creator?: boolean;
   /** Optional Amazon Storefront URL. If set, replaces the mycard.to URL on the public kit. */
   amazon_storefront?: string;
   /** Legacy: read-only after this commit. New links live on the "links" card. */
@@ -65,6 +67,9 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
   );
   const [starLevel, setStarLevel] = useState<StarLevel | "">(
     card?.data.star_level ?? ""
+  );
+  const [topCreator, setTopCreator] = useState<boolean>(
+    card?.data.top_creator ?? false
   );
   const [photoUrl, setPhotoUrl] = useState(card?.data.photo_url ?? "");
   const [photoUploading, setPhotoUploading] = useState(false);
@@ -140,6 +145,7 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
       email: email.trim() || undefined,
       location: location.trim() || undefined,
       star_level: starLevel || undefined,
+      top_creator: topCreator || undefined,
       amazon_storefront: cleanedStorefront,
     };
 
@@ -318,6 +324,21 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
                 </button>
               ))}
             </div>
+            <label className="mt-3 flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={topCreator}
+                onChange={(e) => setTopCreator(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-pink-600 focus:ring-pink-500"
+              />
+              <span className="text-sm text-slate-700">
+                <span className="font-medium">Top Creator badge</span>
+                <span className="block text-xs text-slate-500 mt-0.5">
+                  Only select this option if your public storefront has the Top
+                  Creator badge label.
+                </span>
+              </span>
+            </label>
           </Field>
         </div>
       </div>

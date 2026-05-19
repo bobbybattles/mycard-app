@@ -10,6 +10,8 @@ import PortfolioCardEditor, {
   type PortfolioCardData,
 } from "@/components/cards/portfolio-card-editor";
 import ConnectionsCardEditor from "@/components/cards/connections-card-editor";
+import RatesCardEditor from "@/components/cards/rates-card-editor";
+import type { RatesCardData } from "@/lib/rates";
 import type { LinksCardData, ProfileLink } from "@/lib/links";
 import KitSettingsEditor from "@/components/kits/kit-settings-editor";
 import DesignPicker from "@/components/kits/design-picker";
@@ -41,38 +43,50 @@ export default async function EditKitPage({
   if (!kit || kit.user_id !== user.id) return notFound();
 
   // Load all editable cards for this kit in parallel.
-  const [profileCardRes, metricsCardRes, portfolioCardRes, linksCardRes] =
-    await Promise.all([
-      supabase
-        .from("cards")
-        .select("id, data, is_visible")
-        .eq("kit_id", kit.id)
-        .eq("card_type", "profile")
-        .maybeSingle(),
-      supabase
-        .from("cards")
-        .select("id, data, is_visible")
-        .eq("kit_id", kit.id)
-        .eq("card_type", "metrics")
-        .maybeSingle(),
-      supabase
-        .from("cards")
-        .select("id, data, is_visible")
-        .eq("kit_id", kit.id)
-        .eq("card_type", "portfolio")
-        .maybeSingle(),
-      supabase
-        .from("cards")
-        .select("id, data, is_visible")
-        .eq("kit_id", kit.id)
-        .eq("card_type", "links")
-        .maybeSingle(),
-    ]);
+  const [
+    profileCardRes,
+    metricsCardRes,
+    portfolioCardRes,
+    linksCardRes,
+    ratesCardRes,
+  ] = await Promise.all([
+    supabase
+      .from("cards")
+      .select("id, data, is_visible")
+      .eq("kit_id", kit.id)
+      .eq("card_type", "profile")
+      .maybeSingle(),
+    supabase
+      .from("cards")
+      .select("id, data, is_visible")
+      .eq("kit_id", kit.id)
+      .eq("card_type", "metrics")
+      .maybeSingle(),
+    supabase
+      .from("cards")
+      .select("id, data, is_visible")
+      .eq("kit_id", kit.id)
+      .eq("card_type", "portfolio")
+      .maybeSingle(),
+    supabase
+      .from("cards")
+      .select("id, data, is_visible")
+      .eq("kit_id", kit.id)
+      .eq("card_type", "links")
+      .maybeSingle(),
+    supabase
+      .from("cards")
+      .select("id, data, is_visible")
+      .eq("kit_id", kit.id)
+      .eq("card_type", "rates")
+      .maybeSingle(),
+  ]);
 
   const profileCard = profileCardRes.data;
   const metricsCard = metricsCardRes.data;
   const portfolioCard = portfolioCardRes.data;
   const linksCard = linksCardRes.data;
+  const ratesCard = ratesCardRes.data;
 
   const profileData = (profileCard?.data ?? {}) as ProfileCardData;
   const legacyLinks: ProfileLink[] = [
@@ -172,6 +186,19 @@ export default async function EditKitPage({
               : null
           }
           legacySeed={legacyLinks}
+        />
+
+        <RatesCardEditor
+          kitId={kit.id}
+          card={
+            ratesCard
+              ? {
+                  id: ratesCard.id,
+                  data: (ratesCard.data ?? { items: [] }) as RatesCardData,
+                  is_visible: ratesCard.is_visible,
+                }
+              : null
+          }
         />
 
         <PortfolioCardEditor

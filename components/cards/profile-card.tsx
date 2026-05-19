@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { ProfileCardData } from "./profile-card-editor";
-import StarEmblem from "./star-emblem";
+import StarEmblem, { LEVEL_LABELS } from "./star-emblem";
 import CopyButton from "./copy-button";
 
 type Props = {
@@ -46,14 +46,27 @@ export default function ProfileCard({ username, data }: Props) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
-              {displayName}
-            </h1>
-            {data.star_level && (
-              <StarEmblem level={data.star_level} size={32} />
-            )}
-          </div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
+            {displayName}
+          </h1>
+
+          {(data.star_level || data.top_creator) && (
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm">
+              {data.star_level && (
+                <span className="inline-flex items-center gap-1.5">
+                  <StarEmblem level={data.star_level} size={18} />
+                  <span className="font-semibold text-slate-700">
+                    {LEVEL_LABELS[data.star_level]} Creator
+                  </span>
+                </span>
+              )}
+              {data.top_creator && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-200 px-2 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-800">
+                  ★ Top Creator
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm">
             {data.amazon_storefront ? (

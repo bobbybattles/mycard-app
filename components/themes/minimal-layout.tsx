@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ProfileCardData } from "@/components/cards/profile-card-editor";
 import type { PortfolioCardData } from "@/components/cards/portfolio-card-editor";
 import type { MetricsCardData } from "@/lib/metrics-schema";
+import { hasAnyRate, type RatesCardData } from "@/lib/rates";
 import type { ProfileLink } from "@/lib/links";
 import {
   PLATFORM_GROUPS,
@@ -17,9 +18,10 @@ import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
 import LinkIcon from "@/components/cards/link-icon";
 import PlatformIcon from "@/components/cards/platform-icon";
-import StarEmblem from "@/components/cards/star-emblem";
+import StarEmblem, { LEVEL_LABELS } from "@/components/cards/star-emblem";
 import VideoPlayer from "@/components/cards/video-player";
 import CopyButton from "@/components/cards/copy-button";
+import RatesCard from "@/components/cards/rates-card";
 
 type Props = {
   slug: string;
@@ -27,6 +29,7 @@ type Props = {
   metricsData: MetricsCardData;
   portfolioData: PortfolioCardData;
   resolvedLinks: ProfileLink[];
+  ratesData: RatesCardData;
 };
 
 function prettyUrl(url: string): string {
@@ -42,6 +45,7 @@ export default function MinimalLayout({
   metricsData,
   portfolioData,
   resolvedLinks,
+  ratesData,
 }: Props) {
   const displayName = profileData.name || `@${slug}`;
   const initial = (profileData.name?.[0] ?? slug[0] ?? "?").toUpperCase();
@@ -68,14 +72,27 @@ export default function MinimalLayout({
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extralight tracking-tight">
-                {displayName}
-              </h1>
-              {profileData.star_level && (
-                <StarEmblem level={profileData.star_level} size={30} />
-              )}
-            </div>
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extralight tracking-tight">
+              {displayName}
+            </h1>
+
+            {(profileData.star_level || profileData.top_creator) && (
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] sm:text-xs uppercase tracking-[0.25em]">
+                {profileData.star_level && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <StarEmblem level={profileData.star_level} size={16} />
+                    <span className="text-slate-700">
+                      {LEVEL_LABELS[profileData.star_level]} Creator
+                    </span>
+                  </span>
+                )}
+                {profileData.top_creator && (
+                  <span className="text-slate-700 border border-slate-300 px-2 py-0.5">
+                    Top Creator
+                  </span>
+                )}
+              </div>
+            )}
 
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs uppercase tracking-[0.25em]">
               {profileData.amazon_storefront ? (
@@ -207,6 +224,23 @@ export default function MinimalLayout({
                 );
               })}
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Rates — clean hairlines */}
+      {hasAnyRate(ratesData) && (
+        <section className="border-t border-slate-200">
+          <div className="mx-auto max-w-3xl px-6 py-8">
+            <RatesCard
+              data={ratesData}
+              className=""
+              headingClassName="text-[10px] uppercase tracking-[0.5em] text-slate-400 text-center mb-5"
+              titleClassName="text-slate-900 font-light"
+              descriptionClassName="text-slate-500 font-light"
+              amountClassName="text-slate-900 font-light"
+              dividerClassName="divide-y divide-slate-200"
+            />
           </div>
         </section>
       )}

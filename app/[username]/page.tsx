@@ -8,6 +8,8 @@ import { hasAnyMetric, type MetricsCardData } from "@/lib/metrics-schema";
 import PortfolioCard from "@/components/cards/portfolio-card";
 import type { PortfolioCardData } from "@/components/cards/portfolio-card-editor";
 import PlatformLinks from "@/components/cards/platform-links";
+import RatesCard from "@/components/cards/rates-card";
+import { hasAnyRate, type RatesCardData } from "@/lib/rates";
 import type { LinksCardData, ProfileLink } from "@/lib/links";
 import { getDesign } from "@/lib/themes";
 import MagazineLayout from "@/components/themes/magazine-layout";
@@ -47,13 +49,21 @@ export default async function PublicKitPage({
   const metricsCard = cards?.find((c) => c.card_type === "metrics");
   const portfolioCard = cards?.find((c) => c.card_type === "portfolio");
   const linksCard = cards?.find((c) => c.card_type === "links");
-  const knownTypes = new Set(["profile", "metrics", "portfolio", "links"]);
+  const ratesCard = cards?.find((c) => c.card_type === "rates");
+  const knownTypes = new Set([
+    "profile",
+    "metrics",
+    "portfolio",
+    "links",
+    "rates",
+  ]);
   const unknownCards = (cards ?? []).filter((c) => !knownTypes.has(c.card_type));
 
   const profileData = (profileCard?.data ?? {}) as ProfileCardData;
   const metricsData = (metricsCard?.data ?? {}) as MetricsCardData;
   const portfolioData = (portfolioCard?.data ?? { groups: [] }) as PortfolioCardData;
   const linksData = (linksCard?.data ?? { links: [] }) as LinksCardData;
+  const ratesData = (ratesCard?.data ?? { items: [] }) as RatesCardData;
 
   const resolvedLinks: ProfileLink[] =
     linksData.links && linksData.links.length > 0
@@ -81,6 +91,7 @@ export default async function PublicKitPage({
     metricsData,
     portfolioData,
     resolvedLinks,
+    ratesData,
   };
 
   // Each non-classic design has its own self-contained page layout.
@@ -105,6 +116,12 @@ export default async function PublicKitPage({
         {resolvedLinks.length > 0 && (
           <div className="mt-12">
             <PlatformLinks links={resolvedLinks} />
+          </div>
+        )}
+
+        {hasAnyRate(ratesData) && (
+          <div className="mt-12">
+            <RatesCard data={ratesData} />
           </div>
         )}
 

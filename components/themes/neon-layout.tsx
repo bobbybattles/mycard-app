@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ProfileCardData } from "@/components/cards/profile-card-editor";
 import type { PortfolioCardData } from "@/components/cards/portfolio-card-editor";
 import type { MetricsCardData } from "@/lib/metrics-schema";
+import { hasAnyRate, type RatesCardData } from "@/lib/rates";
 import type { ProfileLink } from "@/lib/links";
 import {
   PLATFORM_GROUPS,
@@ -17,9 +18,10 @@ import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
 import LinkIcon from "@/components/cards/link-icon";
 import PlatformIcon from "@/components/cards/platform-icon";
-import StarEmblem from "@/components/cards/star-emblem";
+import StarEmblem, { LEVEL_LABELS } from "@/components/cards/star-emblem";
 import VideoPlayer from "@/components/cards/video-player";
 import CopyButton from "@/components/cards/copy-button";
+import RatesCard from "@/components/cards/rates-card";
 
 type Props = {
   slug: string;
@@ -27,6 +29,7 @@ type Props = {
   metricsData: MetricsCardData;
   portfolioData: PortfolioCardData;
   resolvedLinks: ProfileLink[];
+  ratesData: RatesCardData;
 };
 
 function prettyUrl(url: string): string {
@@ -42,6 +45,7 @@ export default function NeonLayout({
   metricsData,
   portfolioData,
   resolvedLinks,
+  ratesData,
 }: Props) {
   const displayName = profileData.name || `@${slug}`;
   const initial = (profileData.name?.[0] ?? slug[0] ?? "?").toUpperCase();
@@ -93,23 +97,36 @@ export default function NeonLayout({
             </div>
 
             <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <h1
-                  className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, #f472b6 0%, #c4b5fd 50%, #67e8f9 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                  }}
-                >
-                  {displayName}
-                </h1>
-                {profileData.star_level && (
-                  <StarEmblem level={profileData.star_level} size={32} />
-                )}
-              </div>
+              <h1
+                className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight"
+                style={{
+                  background:
+                    "linear-gradient(90deg, #f472b6 0%, #c4b5fd 50%, #67e8f9 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                {displayName}
+              </h1>
+
+              {(profileData.star_level || profileData.top_creator) && (
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm">
+                  {profileData.star_level && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <StarEmblem level={profileData.star_level} size={18} />
+                      <span className="font-semibold text-cyan-200">
+                        {LEVEL_LABELS[profileData.star_level]} Creator
+                      </span>
+                    </span>
+                  )}
+                  {profileData.top_creator && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-300/20 border border-amber-300/40 px-2 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-200">
+                      ★ Top Creator
+                    </span>
+                  )}
+                </div>
+              )}
 
               <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm">
                 {profileData.amazon_storefront ? (
@@ -255,6 +272,21 @@ export default function NeonLayout({
               })}
             </div>
           </section>
+        )}
+
+        {/* Rates — glassmorphism card */}
+        {hasAnyRate(ratesData) && (
+          <div className="mt-12">
+            <RatesCard
+              data={ratesData}
+              className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-5 py-5 sm:px-6 sm:py-5 shadow-2xl"
+              headingClassName="text-xs font-bold uppercase tracking-[0.4em] text-cyan-300 mb-3"
+              titleClassName="text-slate-100"
+              descriptionClassName="text-slate-400"
+              amountClassName="text-pink-300"
+              dividerClassName="divide-y divide-white/10"
+            />
+          </div>
         )}
 
         {/* Portfolio — glassy cards */}
