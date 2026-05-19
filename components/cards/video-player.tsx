@@ -6,10 +6,12 @@ import {
   detectVideoSource,
   extractTikTokId,
   extractYouTubeId,
+  fetchVideoMeta,
   getTikTokEmbedUrl,
   getYouTubeEmbedUrl,
   getYouTubeThumbnail,
 } from "@/lib/video-utils";
+import { detectPlatform } from "@/lib/platforms";
 
 type Props = {
   url: string;
@@ -18,20 +20,46 @@ type Props = {
   hlsUrl?: string;
 };
 
+/** Vertical platforms get a 9:16 tile; everything else stays 16:9. */
+function aspectClassFor(platform: ReturnType<typeof detectPlatform>) {
+  if (platform === "tiktok" || platform === "instagram") return "aspect-[9/16]";
+  return "aspect-video";
+}
+
 // Click-to-play tile.
 // Initial state: just a thumbnail + play overlay (no iframe/video network cost).
 // On click:
 //   YouTube → swap in an autoplay iframe.
-//   Amazon (or other) with hls_url → swap in an HTML5 <video> that plays the
-//     m3u8 stream via hls.js (loaded on demand; Safari plays HLS natively).
+//   TikTok → swap in the TikTok embed/v2 iframe.
+//   Amazon Live (or anything with hls_url) → swap in an HTML5 <video> playing
+//     the m3u8 stream via hls.js (lazy-loaded; Safari plays HLS natively).
 //   Anything else → fall back to opening the URL in a new tab.
 export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props) {
   const source = detectVideoSource(url);
+  const platform = detectPlatform(url);
   const ytId = source === "youtube" ? extractYouTubeId(url) : null;
   const tiktokId = source === "tiktok" ? extractTikTokId(url) : null;
-  const thumbnail = thumbnailUrl || (ytId ? getYouTubeThumbnail(ytId) : null);
+  const builtInThumb = ytId ? getYouTubeThumbnail(ytId) : null;
 
-  // canPlayInline = we know how to render an inline player for this URL.
+  // Lazy-fetch a TikTok thumbnail if the kit was saved before TikTok support
+  // shipped (so thumbnail_url is empty). Same effect for Amazon.
+  const [resolvedThumb, setResolvedThumb] = useState<string | null>(
+    thumbnailUrl || builtInThumb || null
+  );
+  useEffect(() => {
+    if (resolvedThumb) return;
+    if (source !== "tiktok" && source !== "amazon") return;
+    let cancelled = false;
+    (async () => {
+      const meta = await fetchVideoMeta(url);
+      if (cancelled) return;
+      if (meta.thumbnail) setResolvedThumb(meta.thumbnail);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [resolvedThumb, source, url]);
+
   const canPlayInline = !!(ytId || tiktokId || hlsUrl);
   const [playing, setPlaying] = useState(false);
 
@@ -40,8 +68,9 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
       e.preventDefault();
       setPlaying(true);
     }
-    // Otherwise fall through to the <a> default — opens in new tab.
   }
+
+  const aspect = aspectClassFor(platform);
 
   return (
     <a
@@ -51,7 +80,7 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
       onClick={handleClick}
       className="group block rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-pink-200 transition"
     >
-      <div className="relative aspect-video bg-slate-100">
+      <div className={`relative ${aspect} bg-slate-100`}>
         {playing && ytId && (
           <iframe
             src={getYouTubeEmbedUrl(ytId, { autoplay: true })}
@@ -67,17 +96,18 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
             title={title}
             allow="autoplay; encrypted-media; picture-in-picture; web-share"
             allowFullScreen
+            scrolling="no"
             className="absolute inset-0 w-full h-full"
           />
         )}
         {playing && !ytId && !tiktokId && hlsUrl && (
-          <HlsPlayer src={hlsUrl} poster={thumbnail ?? undefined} title={title} />
+          <HlsPlayer src={hlsUrl} poster={resolvedThumb ?? undefined} title={title} />
         )}
         {!playing && (
           <>
-            {thumbnail ? (
+            {resolvedThumb ? (
               <Image
-                src={thumbnail}
+                src={resolvedThumb}
                 alt={title}
                 fill
                 sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
@@ -86,7 +116,11 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm font-semibold">
-                {source === "amazon" ? "Amazon" : "Video"}
+                {source === "amazon"
+                  ? "Amazon"
+                  : source === "tiktok"
+                    ? "TikTok"
+                    : "Video"}
               </div>
             )}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -99,6 +133,11 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
             {source === "amazon" && (
               <span className="absolute top-2 left-2 rounded bg-black/60 text-white text-[10px] font-semibold uppercase px-1.5 py-0.5">
                 Amazon
+              </span>
+            )}
+            {source === "tiktok" && (
+              <span className="absolute top-2 left-2 rounded bg-black/60 text-white text-[10px] font-semibold uppercase px-1.5 py-0.5">
+                TikTok
               </span>
             )}
           </>
@@ -128,15 +167,11 @@ function HlsPlayer({
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-
-    // Safari + iOS: native HLS support, just set the src and go.
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = src;
       void video.play().catch(() => {});
       return;
     }
-
-    // Chrome / Firefox / Edge: lazy-load hls.js (~100KB) only on click.
     let hlsInstance: { destroy: () => void } | null = null;
     let cancelled = false;
     (async () => {
@@ -153,7 +188,6 @@ function HlsPlayer({
           });
           hlsInstance = hls;
         } else {
-          // Last-ditch fallback — set src directly. Some browsers will surprise us.
           video.src = src;
           void video.play().catch(() => {});
         }
@@ -161,7 +195,6 @@ function HlsPlayer({
         console.warn("hls.js load failed", err);
       }
     })();
-
     return () => {
       cancelled = true;
       hlsInstance?.destroy();
