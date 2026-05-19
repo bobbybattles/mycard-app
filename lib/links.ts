@@ -20,6 +20,7 @@ const LINK_PLATFORM_ORDER: Platform[] = [
   "tiktok",
   "instagram",
   "facebook",
+  "ugc",
 ];
 
 export type ProfileLink = {

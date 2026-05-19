@@ -84,6 +84,24 @@ function Inner({ platform }: { platform: Platform }) {
         </svg>
       );
     }
+    case "ugc":
+      // Bold "UGC" wordmark on the gradient bubble — distinctive and unambiguous.
+      return (
+        <svg viewBox="0 0 24 24" width="80%" height="80%" aria-hidden>
+          <text
+            x="12"
+            y="16"
+            fill="#fff"
+            fontSize="8"
+            fontWeight="800"
+            textAnchor="middle"
+            fontFamily="system-ui, -apple-system, sans-serif"
+            letterSpacing="-0.3"
+          >
+            UGC
+          </text>
+        </svg>
+      );
   }
 }
 

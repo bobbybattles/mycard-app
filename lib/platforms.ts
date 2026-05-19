@@ -8,7 +8,8 @@ export type Platform =
   | "instagram"
   | "facebook"
   | "amazon_shop"
-  | "amazon_live";
+  | "amazon_live"
+  | "ugc";
 
 export type PlatformConfig = {
   id: Platform;
@@ -81,6 +82,15 @@ export const PLATFORMS: Record<Platform, PlatformConfig> = {
     canEmbed: true,
     urlHint: "amazon.com/vdp/... or amazon.com/live/...",
   },
+  ugc: {
+    id: "ugc",
+    label: "UGC",
+    shortLabel: "UGC",
+    color: "#7c3aed",
+    gradient: { from: "#a855f7", to: "#ec4899" },
+    canEmbed: false,
+    urlHint: "Link to your UGC reel or portfolio",
+  },
 };
 
 /** Preferred order for "Add a platform" dropdowns and grouped renders. */
@@ -91,6 +101,7 @@ export const PLATFORM_ORDER: Platform[] = [
   "tiktok",
   "instagram",
   "facebook",
+  "ugc",
 ];
 
 /** Detect the platform a URL belongs to. Falls back to "youtube" only when
