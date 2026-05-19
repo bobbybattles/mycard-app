@@ -4,6 +4,18 @@
 // titles from the browser without an API key. Amazon does not — so for Amazon
 // URLs we rely on a server-side scrape (/api/video-meta).
 
+/**
+ * Prepend "https://" if the URL doesn't already have a protocol.
+ * Lets users type bare domains like "youtube.com/@handle" or
+ * "tiktok.com/@user/video/123" and have them work everywhere.
+ */
+export function normalizeUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
 export type VideoSource =
   | "youtube"
   | "amazon"
@@ -109,7 +121,8 @@ export type VideoMeta = {
  *   - Amazon: calls our /api/video-meta route, which scrapes the page's OG tags.
  *   - Other: returns nulls.
  */
-export async function fetchVideoMeta(url: string): Promise<VideoMeta> {
+export async function fetchVideoMeta(rawUrl: string): Promise<VideoMeta> {
+  const url = normalizeUrl(rawUrl);
   const source = detectVideoSource(url);
 
   if (source === "youtube") {

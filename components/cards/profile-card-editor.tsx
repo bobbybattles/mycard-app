@@ -255,7 +255,7 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
             hint="If set, this replaces the mycard.to URL on your public kit and links straight to your storefront."
           >
             <input
-              type="url"
+              type="text"
               value={amazonStorefront}
               onChange={(e) => setAmazonStorefront(e.target.value)}
               placeholder="https://www.amazon.com/shop/yourhandle"

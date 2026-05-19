@@ -151,19 +151,6 @@ export default async function DashboardPage() {
           }
         />
 
-        <PortfolioCardEditor
-          kitId={kit.id}
-          card={
-            portfolioCard
-              ? {
-                  id: portfolioCard.id,
-                  data: (portfolioCard.data ?? { videos: [] }) as PortfolioCardData,
-                  is_visible: portfolioCard.is_visible,
-                }
-              : null
-          }
-        />
-
         <ConnectionsCardEditor
           kitId={kit.id}
           card={
@@ -176,6 +163,19 @@ export default async function DashboardPage() {
               : null
           }
           legacySeed={legacyLinks}
+        />
+
+        <PortfolioCardEditor
+          kitId={kit.id}
+          card={
+            portfolioCard
+              ? {
+                  id: portfolioCard.id,
+                  data: (portfolioCard.data ?? { videos: [] }) as PortfolioCardData,
+                  is_visible: portfolioCard.is_visible,
+                }
+              : null
+          }
         />
 
         <div className="text-center">

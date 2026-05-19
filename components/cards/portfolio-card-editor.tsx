@@ -7,6 +7,7 @@ import {
   extractYouTubeId,
   fetchVideoMeta,
   getYouTubeThumbnail,
+  normalizeUrl,
 } from "@/lib/video-utils";
 import {
   PLATFORMS,
@@ -188,7 +189,8 @@ export default function PortfolioCardEditor({ kitId, card }: Props) {
     setSaveError(null);
     setSaveStatus("idle");
 
-    // Strip empty videos and empty groups.
+    // Strip empty videos and empty groups. Normalize URLs to include https://
+    // so users can paste bare domains like "youtube.com/@handle".
     const cleaned: PortfolioGroup[] = groups
       .map((g) => ({
         id: g.id,
@@ -196,7 +198,7 @@ export default function PortfolioCardEditor({ kitId, card }: Props) {
         label: g.label?.trim() || undefined,
         videos: g.videos
           .map((v) => ({
-            url: v.url.trim(),
+            url: normalizeUrl(v.url),
             title: v.title?.trim() || undefined,
             thumbnail_url: v.thumbnail_url,
             hls_url: v.hls_url,
@@ -351,7 +353,7 @@ export default function PortfolioCardEditor({ kitId, card }: Props) {
                       </div>
                       <div className="space-y-2 min-w-0">
                         <input
-                          type="url"
+                          type="text"
                           value={video.url}
                           onChange={(e) =>
                             handleUrlChange(group.id, idx, e.target.value)

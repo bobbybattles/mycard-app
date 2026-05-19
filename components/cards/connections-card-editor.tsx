@@ -163,7 +163,7 @@ export default function ConnectionsCardEditor({
               <LinkIcon type={link.type} size={36} />
               <div className="space-y-2 min-w-0">
                 <input
-                  type="url"
+                  type="text"
                   value={link.url}
                   onChange={(e) => updateLink(link.id, { url: e.target.value })}
                   placeholder={cfg.urlHint}
