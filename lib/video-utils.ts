@@ -36,7 +36,7 @@ export function getYouTubeThumbnail(videoId: string): string {
  * Returns null for non-YouTube URLs, unlisted/private videos, or network errors.
  * Safe to call from the browser — YouTube's oEmbed sends CORS headers.
  */
-export async function fetchVideoTitle(url: string): Promise<string | null> {
+export async function fetchYouTubeTitle(url: string): Promise<string | null> {
   if (detectVideoSource(url) !== "youtube") return null;
   try {
     const res = await fetch(
@@ -48,4 +48,59 @@ export async function fetchVideoTitle(url: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+export type VideoMeta = {
+  title: string | null;
+  thumbnail: string | null;
+  /** HLS .m3u8 stream URL, when the source exposes one (currently Amazon VDP). */
+  hls: string | null;
+};
+
+/**
+ * Fetch metadata for any portfolio URL.
+ *   - YouTube: uses oEmbed for the title; thumbnail is derived from the video ID.
+ *   - Amazon: calls our /api/video-meta route, which scrapes the page's OG tags.
+ *   - Other: returns nulls.
+ */
+export async function fetchVideoMeta(url: string): Promise<VideoMeta> {
+  const source = detectVideoSource(url);
+
+  if (source === "youtube") {
+    const id = extractYouTubeId(url);
+    const [title] = await Promise.all([fetchYouTubeTitle(url)]);
+    return {
+      title,
+      thumbnail: id ? getYouTubeThumbnail(id) : null,
+      hls: null,
+    };
+  }
+
+  if (source === "amazon") {
+    try {
+      const res = await fetch(`/api/video-meta?url=${encodeURIComponent(url)}`);
+      if (!res.ok) return { title: null, thumbnail: null, hls: null };
+      const data = (await res.json()) as Partial<VideoMeta>;
+      return {
+        title: data.title ?? null,
+        thumbnail: data.thumbnail ?? null,
+        hls: data.hls ?? null,
+      };
+    } catch {
+      return { title: null, thumbnail: null, hls: null };
+    }
+  }
+
+  return { title: null, thumbnail: null, hls: null };
+}
+
+/** Build a YouTube embed URL for an inline iframe player. */
+export function getYouTubeEmbedUrl(videoId: string, opts?: { autoplay?: boolean }): string {
+  const params = new URLSearchParams({
+    rel: "0",
+    modestbranding: "1",
+    playsinline: "1",
+  });
+  if (opts?.autoplay) params.set("autoplay", "1");
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 }

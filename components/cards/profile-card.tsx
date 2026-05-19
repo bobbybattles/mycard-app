@@ -53,14 +53,16 @@ export default function ProfileCard({ username, data }: Props) {
       </h1>
 
       {data.amazon_storefront ? (
-        <a
-          href={data.amazon_storefront}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-1 inline-block text-sm font-mono text-pink-600 hover:text-pink-700 hover:underline"
-        >
-          {prettifyUrl(data.amazon_storefront)}
-        </a>
+        <p className="mt-1">
+          <a
+            href={data.amazon_storefront}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-mono text-pink-600 hover:text-pink-700 hover:underline"
+          >
+            {prettifyUrl(data.amazon_storefront)}
+          </a>
+        </p>
       ) : (
         <p className="mt-1 text-sm font-mono text-slate-500">
           mycard.to/{username}
@@ -68,7 +70,7 @@ export default function ProfileCard({ username, data }: Props) {
       )}
 
       {data.star_level && (
-        <div className="mt-5 inline-flex flex-col items-center">
+        <div className="mt-5 flex flex-col items-center">
           <StarEmblem level={data.star_level} size={72} />
           <span className="mt-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700">
             {LEVEL_LABELS[data.star_level]} Creator

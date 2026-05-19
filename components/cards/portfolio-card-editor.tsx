@@ -5,13 +5,17 @@ import { createClient } from "@/lib/supabase/client";
 import {
   detectVideoSource,
   extractYouTubeId,
-  fetchVideoTitle,
+  fetchVideoMeta,
   getYouTubeThumbnail,
 } from "@/lib/video-utils";
 
 export type PortfolioVideo = {
   url: string;
   title?: string;
+  /** Cached thumbnail URL (Amazon scrape result or any external poster). */
+  thumbnail_url?: string;
+  /** Cached HLS stream URL for sources that expose one (Amazon VDP). */
+  hls_url?: string;
 };
 
 export type PortfolioCardData = {
@@ -61,28 +65,31 @@ export default function PortfolioCardEditor({ kitId, card }: Props) {
     });
   }
 
-  // When the URL in a slot changes, try to auto-fill the title from YouTube's
-  // oEmbed endpoint. Only fires if the user hasn't already typed a title.
+  // When the URL in a slot changes, try to auto-fill the title + thumbnail.
+  // YouTube uses oEmbed (client-side). Amazon hits our /api/video-meta scraper.
   function handleUrlChange(i: number, value: string) {
     setSlot(i, { url: value });
-    const slot = slots[i];
-    if (slot?.title?.trim()) return; // Don't clobber what the user typed.
-    if (detectVideoSource(value) !== "youtube") return;
+    const source = detectVideoSource(value);
+    if (source !== "youtube" && source !== "amazon") return;
     setFetching((f) => ({ ...f, [i]: true }));
     // Tiny debounce so we don't fire on every keystroke.
     const cancel = setTimeout(async () => {
-      const title = await fetchVideoTitle(value);
+      const meta = await fetchVideoMeta(value);
       setFetching((f) => ({ ...f, [i]: false }));
-      if (title) {
-        setSlots((prev) => {
-          const next = [...prev];
-          // Only fill if the user still hasn't typed their own title.
-          if (!next[i].title?.trim()) {
-            next[i] = { ...next[i], title };
-          }
-          return next;
-        });
-      }
+      setSlots((prev) => {
+        const next = [...prev];
+        const current = next[i];
+        // Only fill the title if the user hasn't typed their own.
+        const titleToUse = current.title?.trim() || meta.title || current.title;
+        next[i] = {
+          ...current,
+          title: titleToUse,
+          // Always update cached thumbnail + hls when we have fresh values.
+          thumbnail_url: meta.thumbnail ?? current.thumbnail_url,
+          hls_url: meta.hls ?? current.hls_url,
+        };
+        return next;
+      });
     }, 450);
     return () => clearTimeout(cancel);
   }
@@ -94,11 +101,18 @@ export default function PortfolioCardEditor({ kitId, card }: Props) {
 
     // Persist only slots with a non-empty URL. Trim everything.
     const videos: PortfolioVideo[] = slots
-      .map((s) => ({ url: s.url.trim(), title: s.title?.trim() || "" }))
+      .map((s) => ({
+        url: s.url.trim(),
+        title: s.title?.trim() || "",
+        thumbnail_url: s.thumbnail_url,
+        hls_url: s.hls_url,
+      }))
       .filter((s) => s.url.length > 0)
       .map((s) => ({
         url: s.url,
         ...(s.title ? { title: s.title } : {}),
+        ...(s.thumbnail_url ? { thumbnail_url: s.thumbnail_url } : {}),
+        ...(s.hls_url ? { hls_url: s.hls_url } : {}),
       }));
 
     const data: PortfolioCardData = { videos };
@@ -158,7 +172,8 @@ export default function PortfolioCardEditor({ kitId, card }: Props) {
         {slots.map((slot, i) => {
           const source = detectVideoSource(slot.url);
           const ytId = source === "youtube" ? extractYouTubeId(slot.url) : null;
-          const previewThumb = ytId ? getYouTubeThumbnail(ytId) : null;
+          const previewThumb =
+            (ytId && getYouTubeThumbnail(ytId)) || slot.thumbnail_url || null;
           const isFetching = !!fetching[i];
           return (
             <div

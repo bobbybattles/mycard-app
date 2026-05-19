@@ -1,0 +1,130 @@
+// Server-side metadata scraper for video URLs (primarily Amazon VDP pages).
+// We fetch the URL, parse <meta> tags, and return a small JSON blob:
+//   { title, thumbnail, hls } — all optional.
+//
+// Why server-side: Amazon serves CORS-blocked HTML, so we can't fetch from
+// the browser. Doing it on our server with a normal browser User-Agent works.
+// YouTube uses the public oEmbed endpoint client-side (see video-utils.ts).
+
+import { NextResponse, type NextRequest } from "next/server";
+
+export const runtime = "nodejs"; // We need text fetch + regex; not on Edge.
+
+const USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
+
+// Pull a meta tag's content by property OR name.
+function meta(html: string, key: string): string | null {
+  const re = new RegExp(
+    `<meta[^>]+(?:property|name)=["']${key}["'][^>]+content=["']([^"']+)["']`,
+    "i"
+  );
+  const m1 = html.match(re);
+  if (m1) return decodeHtmlEntities(m1[1]);
+  // Some pages put content= before property=
+  const re2 = new RegExp(
+    `<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${key}["']`,
+    "i"
+  );
+  const m2 = html.match(re2);
+  return m2 ? decodeHtmlEntities(m2[1]) : null;
+}
+
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'");
+}
+
+export async function GET(request: NextRequest) {
+  const target = request.nextUrl.searchParams.get("url");
+  if (!target) {
+    return NextResponse.json({ error: "Missing ?url" }, { status: 400 });
+  }
+
+  // Light allowlist: only scrape Amazon hosts for now. YouTube uses oEmbed.
+  let parsed: URL;
+  try {
+    parsed = new URL(target);
+  } catch {
+    return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+  }
+  if (!/(^|\.)amazon\./i.test(parsed.hostname) && !/amzn\.to$/i.test(parsed.hostname)) {
+    return NextResponse.json(
+      { error: "Unsupported host (only Amazon URLs are scraped)" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const res = await fetch(target, {
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+      },
+      redirect: "follow",
+      // Cache at the edge for 1 day — these meta values don't change often.
+      next: { revalidate: 86400 },
+    });
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: `Upstream ${res.status}` },
+        { status: 502 }
+      );
+    }
+    // Only read the first ~250KB — meta tags live in <head>, no need to download the full page.
+    const text = await res.text();
+    const head = text.slice(0, 250_000);
+
+    // Title preference: og:image:alt strips the "Watch ... on Amazon Live" wrapper,
+    // but og:title or <title> is also a fine fallback. Try several in order.
+    const ogAlt = meta(head, "og:image:alt");
+    const ogTitle = meta(head, "og:title");
+    const ogDesc = meta(head, "og:description");
+    const docTitle =
+      head.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim() ?? null;
+    let title =
+      cleanAmazonTitle(ogAlt) ||
+      cleanAmazonTitle(ogTitle) ||
+      cleanAmazonTitle(ogDesc) ||
+      cleanAmazonTitle(docTitle);
+
+    // Amazon often returns a title like
+    //   "Watch <real title> on Amazon Live"
+    // — already stripped above. If it still ends with "..." it was truncated;
+    // we leave the ellipsis since it's not a parsing artifact.
+    if (title && title.length > 200) title = title.slice(0, 197) + "…";
+
+    const thumbnail =
+      meta(head, "og:image:secure_url") || meta(head, "og:image");
+    const hls = meta(head, "og:video:secure_url") || meta(head, "og:video");
+
+    return NextResponse.json({
+      title: title || null,
+      thumbnail: thumbnail || null,
+      hls: hls && /\.m3u8(\?|$)/i.test(hls) ? hls : null,
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: (err as Error).message ?? "Fetch failed" },
+      { status: 502 }
+    );
+  }
+}
+
+function cleanAmazonTitle(s: string | null): string | null {
+  if (!s) return null;
+  const trimmed = s.trim();
+  if (!trimmed) return null;
+  // "Watch <title> on Amazon Live" → "<title>"
+  const m = trimmed.match(/^Watch (.+?) on Amazon Live$/i);
+  if (m) return m[1];
+  // ": Amazon.com" / "- Amazon.com" suffix on <title>
+  return trimmed.replace(/\s*[:\-–|]\s*Amazon(?:\.com)?(?:\s+Live)?\s*$/i, "");
+}
