@@ -73,10 +73,24 @@ export const METRIC_SECTIONS: MetricSection[] = [
 ];
 
 export type MetricsCardData = {
+  /** Which time window these numbers cover. Shown on the public kit. */
+  timeframe?: string;
   offsite?: Record<MetricKey, string>;
   onsite?: Record<MetricKey, string>;
   creator_connections?: Record<MetricKey, string>;
 };
+
+/** Common timeframe presets shown in the metrics editor's dropdown. */
+export const TIMEFRAME_OPTIONS: string[] = [
+  "Last 7 days",
+  "Last 30 days",
+  "Last 60 days",
+  "Last 90 days",
+  "Last 6 months",
+  "Last 12 months",
+  "Year to date",
+  "All time",
+];
 
 /** True if any metric in the entire card has a non-empty value. */
 export function hasAnyMetric(data: MetricsCardData | undefined | null): boolean {

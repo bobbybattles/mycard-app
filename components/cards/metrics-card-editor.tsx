@@ -4,9 +4,18 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   METRIC_SECTIONS,
+  TIMEFRAME_OPTIONS,
   type MetricsCardData,
   type MetricSection,
 } from "@/lib/metrics-schema";
+
+// Decide what to put in the timeframe <select>. If the saved value isn't one
+// of the preset options, treat it as "Custom" so the input is editable.
+function splitTimeframe(saved: string | undefined) {
+  if (!saved) return { preset: "", custom: "" };
+  if (TIMEFRAME_OPTIONS.includes(saved)) return { preset: saved, custom: "" };
+  return { preset: "__custom__", custom: saved };
+}
 
 type Props = {
   kitId: string;
@@ -31,12 +40,25 @@ function initialValues(data: MetricsCardData | undefined): Record<string, Record
 export default function MetricsCardEditor({ kitId, card }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const [values, setValues] = useState(() => initialValues(card?.data));
+  const initialTimeframe = splitTimeframe(card?.data?.timeframe);
+  const [timeframePreset, setTimeframePreset] = useState<string>(
+    initialTimeframe.preset
+  );
+  const [timeframeCustom, setTimeframeCustom] = useState<string>(
+    initialTimeframe.custom
+  );
   const [openSection, setOpenSection] = useState<MetricSection["id"] | null>(
     "offsite"
   );
   const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, startSave] = useTransition();
+
+  // Resolve the timeframe string to persist (preset name OR the custom text).
+  const resolvedTimeframe =
+    timeframePreset === "__custom__"
+      ? timeframeCustom.trim()
+      : timeframePreset;
 
   useEffect(() => {
     if (saveStatus !== "saved") return;
@@ -58,6 +80,7 @@ export default function MetricsCardEditor({ kitId, card }: Props) {
 
     // Build the persisted data, dropping any empty strings so the row stays tidy.
     const data: MetricsCardData = {};
+    if (resolvedTimeframe) data.timeframe = resolvedTimeframe;
     for (const section of METRIC_SECTIONS) {
       const cleaned: Record<string, string> = {};
       for (const metric of section.metrics) {
@@ -115,6 +138,41 @@ export default function MetricsCardEditor({ kitId, card }: Props) {
             Saved ✓
           </span>
         )}
+      </div>
+
+      <div className="mt-5 rounded-lg border border-pink-100 bg-pink-50/50 px-4 py-3">
+        <label className="block">
+          <span className="block text-sm font-semibold text-slate-900">
+            Time frame these numbers cover
+          </span>
+          <span className="block text-xs text-slate-600 mt-0.5">
+            Shown at the top of the metrics section on your public kit so
+            brands know what window they&apos;re looking at.
+          </span>
+          <select
+            value={timeframePreset}
+            onChange={(e) => setTimeframePreset(e.target.value)}
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
+          >
+            <option value="">Pick a timeframe…</option>
+            {TIMEFRAME_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+            <option value="__custom__">Custom…</option>
+          </select>
+          {timeframePreset === "__custom__" && (
+            <input
+              type="text"
+              value={timeframeCustom}
+              onChange={(e) => setTimeframeCustom(e.target.value)}
+              placeholder="e.g. Q4 2025, Jan – Mar 2026"
+              maxLength={60}
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+          )}
+        </label>
       </div>
 
       <div className="mt-4 space-y-3">

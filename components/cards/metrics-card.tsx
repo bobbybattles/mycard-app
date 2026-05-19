@@ -12,9 +12,19 @@ type Props = {
 // Each of the three sections only appears if it has at least one filled metric.
 // Each filled metric is rendered as a small stat tile (label on top, value below).
 export default function MetricsCard({ data }: Props) {
-  // If nothing's filled in across the whole card, parent decides whether to show it.
   return (
     <div className="space-y-6">
+      {data.timeframe && (
+        <div className="text-center">
+          <p className="text-xs uppercase tracking-widest text-slate-500">
+            Performance
+          </p>
+          <p className="mt-0.5 text-sm font-semibold text-slate-700">
+            {data.timeframe}
+          </p>
+        </div>
+      )}
+
       {METRIC_SECTIONS.map((section) => {
         if (!sectionHasAnyMetric(data, section.id)) return null;
         const sectionData = data[section.id] ?? {};
