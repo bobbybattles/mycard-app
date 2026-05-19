@@ -402,43 +402,60 @@ export default function PortfolioCardEditor({ kitId, card }: Props) {
 
       {/* Add a new group */}
       <div className="mt-4">
-        {showPlatformPicker ? (
-          <div className="rounded-lg border border-dashed border-slate-300 p-3">
-            <p className="text-xs text-slate-600 mb-2 font-medium">
-              Pick a platform
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {PLATFORM_ORDER.map((p) => (
+        {(() => {
+          const usedPlatforms = new Set(groups.map((g) => g.platform));
+          const availablePlatforms = PLATFORM_ORDER.filter(
+            (p) => !usedPlatforms.has(p)
+          );
+          if (availablePlatforms.length === 0) {
+            return (
+              <p className="text-xs text-slate-500 italic px-1">
+                All platforms have a group. Remove one above to add a different
+                platform.
+              </p>
+            );
+          }
+          if (showPlatformPicker) {
+            return (
+              <div className="rounded-lg border border-dashed border-slate-300 p-3">
+                <p className="text-xs text-slate-600 mb-2 font-medium">
+                  Pick a platform
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {availablePlatforms.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => addGroup(p)}
+                      className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-left hover:border-pink-300 hover:bg-pink-50 transition"
+                    >
+                      <PlatformIcon platform={p} size={28} />
+                      <span className="text-sm font-medium text-slate-900">
+                        {PLATFORMS[p].label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
                 <button
-                  key={p}
                   type="button"
-                  onClick={() => addGroup(p)}
-                  className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-left hover:border-pink-300 hover:bg-pink-50 transition"
+                  onClick={() => setShowPlatformPicker(false)}
+                  className="mt-3 text-xs text-slate-500 hover:text-slate-700"
                 >
-                  <PlatformIcon platform={p} size={28} />
-                  <span className="text-sm font-medium text-slate-900">
-                    {PLATFORMS[p].label}
-                  </span>
+                  Cancel
                 </button>
-              ))}
-            </div>
+              </div>
+            );
+          }
+          return (
             <button
               type="button"
-              onClick={() => setShowPlatformPicker(false)}
-              className="mt-3 text-xs text-slate-500 hover:text-slate-700"
+              onClick={() => setShowPlatformPicker(true)}
+              className="w-full rounded-lg border-2 border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-600 hover:border-pink-400 hover:text-pink-700 hover:bg-pink-50 transition"
             >
-              Cancel
+              + Add a video group
             </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowPlatformPicker(true)}
-            className="w-full rounded-lg border-2 border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-600 hover:border-pink-400 hover:text-pink-700 hover:bg-pink-50 transition"
-          >
-            + Add a video group
-          </button>
-        )}
+          );
+        })()}
       </div>
 
       <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">

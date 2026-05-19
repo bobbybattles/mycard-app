@@ -4,12 +4,19 @@
 // titles from the browser without an API key. Amazon does not — so for Amazon
 // URLs we rely on a server-side scrape (/api/video-meta).
 
-export type VideoSource = "youtube" | "amazon" | "tiktok" | "instagram" | "other";
+export type VideoSource =
+  | "youtube"
+  | "amazon"
+  | "tiktok"
+  | "instagram"
+  | "facebook"
+  | "other";
 
 const YT_RE =
   /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 const TIKTOK_RE = /tiktok\.com\/[^/]*\/?video\/(\d+)/i;
 const IG_RE = /instagram\.com\/(?:[^/]+\/)?(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/i;
+const FB_RE = /(?:facebook\.com|fb\.watch)\//i;
 
 /** Detect the source by URL pattern. Cheap, no network. */
 export function detectVideoSource(url: string): VideoSource {
@@ -17,6 +24,7 @@ export function detectVideoSource(url: string): VideoSource {
   if (YT_RE.test(url)) return "youtube";
   if (TIKTOK_RE.test(url)) return "tiktok";
   if (IG_RE.test(url)) return "instagram";
+  if (FB_RE.test(url)) return "facebook";
   if (/(?:^|\/\/)([a-z0-9-]+\.)?amazon\./i.test(url) || /amzn\.to\//i.test(url)) {
     return "amazon";
   }
@@ -46,6 +54,16 @@ export function extractInstagramShortcode(url: string): string | null {
  */
 export function getInstagramEmbedUrl(shortcode: string): string {
   return `https://www.instagram.com/p/${shortcode}/embed/`;
+}
+
+/**
+ * Build a Facebook video/reel embed URL using the public plugins/video.php
+ * iframe. Accepts any facebook.com or fb.watch URL.
+ */
+export function getFacebookEmbedUrl(originalUrl: string): string {
+  return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(
+    originalUrl
+  )}&show_text=false&autoplay=true`;
 }
 
 /** Pull the 11-char video ID out of any common YouTube URL shape. */
@@ -104,7 +122,12 @@ export async function fetchVideoMeta(url: string): Promise<VideoMeta> {
     };
   }
 
-  if (source === "amazon" || source === "tiktok" || source === "instagram") {
+  if (
+    source === "amazon" ||
+    source === "tiktok" ||
+    source === "instagram" ||
+    source === "facebook"
+  ) {
     try {
       const res = await fetch(`/api/video-meta?url=${encodeURIComponent(url)}`);
       if (!res.ok) return { title: null, thumbnail: null, hls: null };

@@ -60,8 +60,8 @@ export const PLATFORMS: Record<Platform, PlatformConfig> = {
     shortLabel: "Facebook",
     color: "#1877F2",
     gradient: { from: "#4267B2", to: "#1877F2" },
-    canEmbed: false,
-    urlHint: "facebook.com/... or fb.watch/...",
+    canEmbed: true,
+    urlHint: "facebook.com/reel/... or fb.watch/...",
   },
   amazon_shop: {
     id: "amazon_shop",

@@ -75,9 +75,13 @@ export default async function PublicKitPage({
           </div>
         )}
 
-        {profileData.platform_links && profileData.platform_links.length > 0 && (
+        {((profileData.platform_links && profileData.platform_links.length > 0) ||
+          (profileData.social_profiles && profileData.social_profiles.length > 0)) && (
           <div className="mt-14">
-            <PlatformLinks links={profileData.platform_links} />
+            <PlatformLinks
+              links={profileData.platform_links ?? []}
+              socials={profileData.social_profiles}
+            />
           </div>
         )}
 

@@ -6,11 +6,21 @@ import { createClient } from "@/lib/supabase/client";
 import StarEmblem, { type StarLevel, LEVEL_LABELS } from "./star-emblem";
 import { PLATFORMS, PLATFORM_ORDER, type Platform } from "@/lib/platforms";
 import PlatformIcon from "./platform-icon";
+import { SOCIALS, SOCIAL_ORDER, type SocialType } from "@/lib/socials";
+import SocialIcon from "./social-icon";
 
 export type ProfilePlatformLink = {
   id: string;
   platform: Platform;
   /** Optional label (e.g. "Main channel", "Cooking account"). */
+  label?: string;
+  url: string;
+};
+
+export type ProfileSocialLink = {
+  id: string;
+  type: SocialType;
+  /** Optional label (e.g. "Personal blog"). */
   label?: string;
   url: string;
 };
@@ -27,6 +37,8 @@ export type ProfileCardData = {
   amazon_storefront?: string;
   /** Additional platform links (YouTube channels, TikTok, etc.) shown in a "Find me" footer. */
   platform_links?: ProfilePlatformLink[];
+  /** Other social profile links (X, LinkedIn, Pinterest, website, etc.). */
+  social_profiles?: ProfileSocialLink[];
 };
 
 const STAR_LEVELS: StarLevel[] = ["bronze", "silver", "gold", "platinum"];
@@ -67,6 +79,54 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
       }))
   );
   const [showPlatformPicker, setShowPlatformPicker] = useState(false);
+
+  const [socialProfiles, setSocialProfiles] = useState<ProfileSocialLink[]>(
+    () =>
+      (card?.data.social_profiles ?? []).map((s) => ({
+        id: s.id || randomId(),
+        type: s.type,
+        label: s.label,
+        url: s.url,
+      }))
+  );
+  const [showSocialPicker, setShowSocialPicker] = useState(false);
+
+  // Hide platform options that are already added so users don't pick duplicates.
+  const usedPlatforms = new Set(platformLinks.map((l) => l.platform));
+  const availablePlatforms = PLATFORM_ORDER.filter((p) => !usedPlatforms.has(p));
+
+  const usedSocials = new Set(socialProfiles.map((s) => s.type));
+  const availableSocials = SOCIAL_ORDER.filter((s) => !usedSocials.has(s));
+
+  function addSocialProfile(type: SocialType) {
+    setSocialProfiles((prev) => [
+      ...prev,
+      { id: randomId(), type, label: "", url: "" },
+    ]);
+    setShowSocialPicker(false);
+  }
+
+  function updateSocialProfile(id: string, patch: Partial<ProfileSocialLink>) {
+    setSocialProfiles((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...patch } : s))
+    );
+  }
+
+  function removeSocialProfile(id: string) {
+    setSocialProfiles((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  function moveSocialProfile(id: string, direction: "up" | "down") {
+    setSocialProfiles((prev) => {
+      const idx = prev.findIndex((s) => s.id === id);
+      if (idx === -1) return prev;
+      const swap = direction === "up" ? idx - 1 : idx + 1;
+      if (swap < 0 || swap >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[swap]] = [next[swap], next[idx]];
+      return next;
+    });
+  }
 
   function addPlatformLink(platform: Platform) {
     setPlatformLinks((prev) => [
@@ -184,6 +244,23 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
       amazon_storefront: cleanedStorefront,
       platform_links:
         cleanedPlatformLinks.length > 0 ? cleanedPlatformLinks : undefined,
+      social_profiles:
+        (() => {
+          const cleaned = socialProfiles
+            .map((s) => {
+              const url = s.url.trim();
+              const withProtocol =
+                !url || /^https?:\/\//i.test(url) ? url : `https://${url}`;
+              return {
+                id: s.id,
+                type: s.type,
+                label: s.label?.trim() || undefined,
+                url: withProtocol,
+              };
+            })
+            .filter((s) => s.url.length > 0);
+          return cleaned.length > 0 ? cleaned : undefined;
+        })(),
     };
 
     startSave(async () => {
@@ -434,13 +511,17 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
         </div>
 
         <div className="mt-3">
-          {showPlatformPicker ? (
+          {availablePlatforms.length === 0 ? (
+            <p className="text-xs text-slate-500 italic px-1">
+              All platforms added. Remove one above to add another.
+            </p>
+          ) : showPlatformPicker ? (
             <div className="rounded-lg border border-dashed border-slate-300 p-3">
               <p className="text-xs text-slate-600 mb-2 font-medium">
                 Pick a platform
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {PLATFORM_ORDER.map((p) => (
+                {availablePlatforms.map((p) => (
                   <button
                     key={p}
                     type="button"
@@ -469,6 +550,133 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
               className="w-full rounded-lg border-2 border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-600 hover:border-pink-400 hover:text-pink-700 hover:bg-pink-50 transition"
             >
               + Add platform link
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Social profiles — different from Platforms: general find-me links
+          like X, LinkedIn, Pinterest, Threads, Snapchat, Website. */}
+      <div className="mt-8 border-t border-slate-100 pt-6">
+        <h3 className="font-semibold text-slate-900">Social profiles</h3>
+        <p className="text-sm text-slate-600 mt-0.5">
+          Where else brands can find you. Shown alongside your platform links on
+          the public kit.
+        </p>
+
+        <div className="mt-4 space-y-2">
+          {socialProfiles.map((social, idx) => {
+            const cfg = SOCIALS[social.type];
+            const isFirst = idx === 0;
+            const isLast = idx === socialProfiles.length - 1;
+            return (
+              <div
+                key={social.id}
+                className="grid grid-cols-[40px_1fr_auto] gap-3 items-center rounded-lg border border-slate-200 p-3"
+              >
+                <SocialIcon type={social.type} size={36} />
+                <div className="space-y-2 min-w-0">
+                  <input
+                    type="url"
+                    value={social.url}
+                    onChange={(e) =>
+                      updateSocialProfile(social.id, { url: e.target.value })
+                    }
+                    placeholder={cfg.urlHint}
+                    maxLength={300}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                  <input
+                    type="text"
+                    value={social.label ?? ""}
+                    onChange={(e) =>
+                      updateSocialProfile(social.id, { label: e.target.value })
+                    }
+                    placeholder='Optional label (e.g. "Personal blog")'
+                    maxLength={50}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => moveSocialProfile(social.id, "up")}
+                    disabled={isFirst}
+                    className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Move up"
+                    title="Move up"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M12 4l-8 8h5v8h6v-8h5z" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveSocialProfile(social.id, "down")}
+                    disabled={isLast}
+                    className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Move down"
+                    title="Move down"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M12 20l8-8h-5V4H9v8H4z" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeSocialProfile(social.id)}
+                    className="text-xs text-slate-400 hover:text-red-600 px-1"
+                    aria-label="Remove social"
+                    title="Remove"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-3">
+          {availableSocials.length === 0 ? (
+            <p className="text-xs text-slate-500 italic px-1">
+              All social options added. Remove one above to add another.
+            </p>
+          ) : showSocialPicker ? (
+            <div className="rounded-lg border border-dashed border-slate-300 p-3">
+              <p className="text-xs text-slate-600 mb-2 font-medium">
+                Pick a social profile
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {availableSocials.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => addSocialProfile(s)}
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-left hover:border-pink-300 hover:bg-pink-50 transition"
+                  >
+                    <SocialIcon type={s} size={28} />
+                    <span className="text-sm font-medium text-slate-900">
+                      {SOCIALS[s].label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSocialPicker(false)}
+                className="mt-3 text-xs text-slate-500 hover:text-slate-700"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowSocialPicker(true)}
+              className="w-full rounded-lg border-2 border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-600 hover:border-pink-400 hover:text-pink-700 hover:bg-pink-50 transition"
+            >
+              + Add social profile
             </button>
           )}
         </div>

@@ -8,6 +8,7 @@ import {
   extractTikTokId,
   extractYouTubeId,
   fetchVideoMeta,
+  getFacebookEmbedUrl,
   getInstagramEmbedUrl,
   getTikTokEmbedUrl,
   getYouTubeEmbedUrl,
@@ -43,6 +44,7 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
   const tiktokId = source === "tiktok" ? extractTikTokId(url) : null;
   const igShortcode =
     source === "instagram" ? extractInstagramShortcode(url) : null;
+  const fbEmbedUrl = source === "facebook" ? getFacebookEmbedUrl(url) : null;
   const builtInThumb = ytId ? getYouTubeThumbnail(ytId) : null;
 
   // Lazy-fetch a thumbnail when the kit was saved before scrape support shipped
@@ -55,7 +57,8 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
     if (
       source !== "tiktok" &&
       source !== "amazon" &&
-      source !== "instagram"
+      source !== "instagram" &&
+      source !== "facebook"
     ) {
       return;
     }
@@ -70,7 +73,7 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
     };
   }, [resolvedThumb, source, url]);
 
-  const canPlayInline = !!(ytId || tiktokId || igShortcode || hlsUrl);
+  const canPlayInline = !!(ytId || tiktokId || igShortcode || fbEmbedUrl || hlsUrl);
   const [playing, setPlaying] = useState(false);
 
   function handleClick(e: React.MouseEvent) {
@@ -120,7 +123,17 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
             className="absolute inset-0 w-full h-full"
           />
         )}
-        {playing && !ytId && !tiktokId && !igShortcode && hlsUrl && (
+        {playing && fbEmbedUrl && !ytId && !tiktokId && !igShortcode && (
+          <iframe
+            src={fbEmbedUrl}
+            title={title}
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+            allowFullScreen
+            scrolling="no"
+            className="absolute inset-0 w-full h-full"
+          />
+        )}
+        {playing && !ytId && !tiktokId && !igShortcode && !fbEmbedUrl && hlsUrl && (
           <HlsPlayer src={hlsUrl} poster={resolvedThumb ?? undefined} title={title} />
         )}
         {!playing && (
@@ -163,6 +176,11 @@ export default function VideoPlayer({ url, title, thumbnailUrl, hlsUrl }: Props)
             {source === "instagram" && (
               <span className="absolute top-2 left-2 rounded bg-black/60 text-white text-[10px] font-semibold uppercase px-1.5 py-0.5">
                 Instagram
+              </span>
+            )}
+            {source === "facebook" && (
+              <span className="absolute top-2 left-2 rounded bg-black/60 text-white text-[10px] font-semibold uppercase px-1.5 py-0.5">
+                Facebook
               </span>
             )}
           </>
