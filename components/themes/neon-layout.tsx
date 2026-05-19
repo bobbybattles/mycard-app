@@ -101,46 +101,48 @@ export default function NeonLayout({
           >
             {displayName}
           </h1>
-          {profileData.amazon_storefront ? (
-            <a
-              href={profileData.amazon_storefront}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-block text-sm font-mono text-cyan-300 hover:text-cyan-100"
-            >
-              {prettyUrl(profileData.amazon_storefront)}
-            </a>
-          ) : (
-            <p className="mt-2 text-sm font-mono text-slate-400">
-              mycard.to/{slug}
-            </p>
-          )}
           {profileData.star_level && (
-            <div className="mt-5 inline-flex flex-col items-center">
+            <div className="mt-4 inline-flex flex-col items-center">
               <StarEmblem level={profileData.star_level} size={68} />
               <span className="mt-1.5 text-xs font-bold uppercase tracking-widest text-cyan-200">
                 {LEVEL_LABELS[profileData.star_level]} Creator
               </span>
             </div>
           )}
+          {profileData.amazon_storefront ? (
+            <div className="mt-4">
+              <a
+                href={profileData.amazon_storefront}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-sm font-mono text-cyan-300 hover:text-cyan-100"
+              >
+                {prettyUrl(profileData.amazon_storefront)}
+              </a>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm font-mono text-slate-400">
+              mycard.to/{slug}
+            </p>
+          )}
           {profileData.bio && (
             <p className="mt-6 mx-auto max-w-xl text-base text-slate-300 leading-relaxed">
               {profileData.bio}
             </p>
           )}
-          <div className="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
-            {profileData.email && (
+          {profileData.email && (
+            <p className="mt-5 text-sm">
               <a
                 href={`mailto:${profileData.email}`}
                 className="text-pink-300 hover:text-pink-100"
               >
                 {profileData.email}
               </a>
-            )}
-            {profileData.location && (
-              <span className="text-slate-400">{profileData.location}</span>
-            )}
-          </div>
+            </p>
+          )}
+          {profileData.location && (
+            <p className="mt-2 text-sm text-slate-400">{profileData.location}</p>
+          )}
         </section>
 
         {/* Performance — one block per platform group, glassmorphism cards */}

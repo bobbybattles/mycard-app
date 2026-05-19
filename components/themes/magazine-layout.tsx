@@ -74,48 +74,52 @@ export default function MagazineLayout({
             <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl leading-[0.95] font-black tracking-tight">
               {displayName}
             </h1>
-            {profileData.amazon_storefront ? (
-              <a
-                href={profileData.amazon_storefront}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-block text-sm font-mono text-slate-700 hover:text-slate-900 underline underline-offset-4 decoration-2"
-              >
-                {prettyUrl(profileData.amazon_storefront)}
-              </a>
-            ) : (
-              <p className="mt-4 text-sm font-mono text-slate-700">
-                mycard.to/{slug}
-              </p>
-            )}
             {profileData.star_level && (
-              <div className="mt-5 inline-flex items-center gap-3 border-2 border-slate-900 px-3 py-2">
+              <div className="mt-4 inline-flex items-center gap-3 border-2 border-slate-900 px-3 py-2">
                 <StarEmblem level={profileData.star_level} size={32} />
                 <span className="text-xs uppercase tracking-widest font-bold">
                   {LEVEL_LABELS[profileData.star_level]} Creator
                 </span>
               </div>
             )}
+            {profileData.amazon_storefront ? (
+              <div className="mt-4">
+                <a
+                  href={profileData.amazon_storefront}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-sm font-mono text-slate-700 hover:text-slate-900 underline underline-offset-4 decoration-2"
+                >
+                  {prettyUrl(profileData.amazon_storefront)}
+                </a>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm font-mono text-slate-700">
+                mycard.to/{slug}
+              </p>
+            )}
             {profileData.bio && (
               <p className="mt-6 text-lg leading-relaxed text-slate-800 font-serif">
                 {profileData.bio}
               </p>
             )}
-            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              {profileData.email && (
+            {profileData.email && (
+              <p className="mt-6 text-sm">
                 <a
                   href={`mailto:${profileData.email}`}
                   className="inline-flex items-center gap-2 underline underline-offset-4"
                 >
                   ✉ {profileData.email}
                 </a>
-              )}
-              {profileData.location && (
+              </p>
+            )}
+            {profileData.location && (
+              <p className="mt-2 text-sm">
                 <span className="inline-flex items-center gap-2 text-slate-700">
                   📍 {profileData.location}
                 </span>
-              )}
-            </div>
+              </p>
+            )}
           </div>
         </div>
       </section>

@@ -67,23 +67,23 @@ export default function MinimalLayout({
         <h1 className="mt-8 text-5xl sm:text-6xl font-extralight tracking-tight">
           {displayName}
         </h1>
+        {profileData.star_level && (
+          <p className="mt-5 text-xs uppercase tracking-[0.4em] text-slate-500">
+            {LEVEL_LABELS[profileData.star_level]} Creator
+          </p>
+        )}
         {profileData.amazon_storefront ? (
           <a
             href={profileData.amazon_storefront}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-block text-xs font-mono uppercase tracking-[0.3em] text-slate-500 hover:text-slate-900"
+            className="mt-4 inline-block text-xs font-mono uppercase tracking-[0.3em] text-slate-500 hover:text-slate-900"
           >
             {prettyUrl(profileData.amazon_storefront)}
           </a>
         ) : (
-          <p className="mt-3 text-xs font-mono uppercase tracking-[0.3em] text-slate-500">
+          <p className="mt-4 text-xs font-mono uppercase tracking-[0.3em] text-slate-500">
             mycard.to/{slug}
-          </p>
-        )}
-        {profileData.star_level && (
-          <p className="mt-6 text-xs uppercase tracking-[0.4em] text-slate-500">
-            {LEVEL_LABELS[profileData.star_level]} Creator
           </p>
         )}
         {profileData.bio && (
@@ -91,20 +91,20 @@ export default function MinimalLayout({
             {profileData.bio}
           </p>
         )}
-        {(profileData.email || profileData.location) && (
-          <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-2 text-xs uppercase tracking-[0.25em] text-slate-500">
-            {profileData.email && (
-              <a
-                href={`mailto:${profileData.email}`}
-                className="hover:text-slate-900"
-              >
-                {profileData.email}
-              </a>
-            )}
-            {profileData.location && (
-              <span>{profileData.location}</span>
-            )}
-          </div>
+        {profileData.email && (
+          <p className="mt-8 text-xs uppercase tracking-[0.25em]">
+            <a
+              href={`mailto:${profileData.email}`}
+              className="text-slate-500 hover:text-slate-900"
+            >
+              {profileData.email}
+            </a>
+          </p>
+        )}
+        {profileData.location && (
+          <p className="mt-2 text-xs uppercase tracking-[0.25em] text-slate-500">
+            {profileData.location}
+          </p>
         )}
       </section>
 

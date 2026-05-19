@@ -52,8 +52,17 @@ export default function ProfileCard({ username, data }: Props) {
         {displayName}
       </h1>
 
+      {data.star_level && (
+        <div className="mt-3 flex flex-col items-center">
+          <StarEmblem level={data.star_level} size={72} />
+          <span className="mt-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700">
+            {LEVEL_LABELS[data.star_level]} Creator
+          </span>
+        </div>
+      )}
+
       {data.amazon_storefront ? (
-        <p className="mt-1">
+        <p className="mt-3">
           <a
             href={data.amazon_storefront}
             target="_blank"
@@ -64,18 +73,9 @@ export default function ProfileCard({ username, data }: Props) {
           </a>
         </p>
       ) : (
-        <p className="mt-1 text-sm font-mono text-slate-500">
+        <p className="mt-3 text-sm font-mono text-slate-500">
           mycard.to/{username}
         </p>
-      )}
-
-      {data.star_level && (
-        <div className="mt-5 flex flex-col items-center">
-          <StarEmblem level={data.star_level} size={72} />
-          <span className="mt-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700">
-            {LEVEL_LABELS[data.star_level]} Creator
-          </span>
-        </div>
       )}
 
       {data.bio && (

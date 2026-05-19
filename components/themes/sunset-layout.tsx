@@ -74,6 +74,11 @@ export default function SunsetLayout({
                 </div>
               )}
             </div>
+          </div>
+          <div>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.95] text-orange-950">
+              {displayName}
+            </h1>
             {profileData.star_level && (
               <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-2 shadow">
                 <StarEmblem level={profileData.star_level} size={28} />
@@ -82,22 +87,19 @@ export default function SunsetLayout({
                 </span>
               </div>
             )}
-          </div>
-          <div>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.95] text-orange-950">
-              {displayName}
-            </h1>
             {profileData.amazon_storefront ? (
-              <a
-                href={profileData.amazon_storefront}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-block text-sm font-mono font-bold text-orange-800 hover:text-orange-950 underline underline-offset-4 decoration-orange-400 decoration-2"
-              >
-                {prettyUrl(profileData.amazon_storefront)}
-              </a>
+              <div className="mt-4">
+                <a
+                  href={profileData.amazon_storefront}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-sm font-mono font-bold text-orange-800 hover:text-orange-950 underline underline-offset-4 decoration-orange-400 decoration-2"
+                >
+                  {prettyUrl(profileData.amazon_storefront)}
+                </a>
+              </div>
             ) : (
-              <p className="mt-3 text-sm font-mono text-orange-800">
+              <p className="mt-4 text-sm font-mono text-orange-800">
                 mycard.to/{slug}
               </p>
             )}
@@ -106,21 +108,23 @@ export default function SunsetLayout({
                 {profileData.bio}
               </p>
             )}
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
-              {profileData.email && (
+            {profileData.email && (
+              <p className="mt-5 text-sm font-semibold">
                 <a
                   href={`mailto:${profileData.email}`}
                   className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-1.5 hover:bg-white shadow-sm"
                 >
                   ✉ {profileData.email}
                 </a>
-              )}
-              {profileData.location && (
+              </p>
+            )}
+            {profileData.location && (
+              <p className="mt-2 text-sm font-semibold">
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/40 backdrop-blur px-3 py-1.5">
                   📍 {profileData.location}
                 </span>
-              )}
-            </div>
+              </p>
+            )}
           </div>
         </section>
 
