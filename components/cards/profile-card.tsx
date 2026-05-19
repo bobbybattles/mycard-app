@@ -84,8 +84,19 @@ export default function ProfileCard({ username, data }: Props) {
         </p>
       )}
 
+      {data.email && (
+        <p className="mt-4 text-sm">
+          <a
+            href={`mailto:${data.email}`}
+            className="text-pink-600 hover:text-pink-700 hover:underline"
+          >
+            {data.email}
+          </a>
+        </p>
+      )}
+
       {data.location && (
-        <p className="mt-4 text-sm text-slate-600">
+        <p className="mt-3 text-sm text-slate-600">
           {data.location}
         </p>
       )}

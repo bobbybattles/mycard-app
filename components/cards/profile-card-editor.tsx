@@ -29,6 +29,8 @@ export type ProfileCardData = {
   name?: string;
   bio?: string;
   niche?: string;
+  /** Public-facing contact email. Rendered as a mailto link between bio and location. */
+  email?: string;
   location?: string;
   star_level?: StarLevel;
   /** Optional Amazon Storefront URL. If set, replaces the mycard.to URL on the public kit. */
@@ -56,6 +58,7 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const [name, setName] = useState(card?.data.name ?? "");
   const [bio, setBio] = useState(card?.data.bio ?? "");
+  const [email, setEmail] = useState(card?.data.email ?? "");
   const [location, setLocation] = useState(card?.data.location ?? "");
   const [amazonStorefront, setAmazonStorefront] = useState(
     card?.data.amazon_storefront ?? ""
@@ -134,6 +137,7 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
       photo_url: photoUrl || undefined,
       name: name.trim() || undefined,
       bio: bio.trim() || undefined,
+      email: email.trim() || undefined,
       location: location.trim() || undefined,
       star_level: starLevel || undefined,
       amazon_storefront: cleanedStorefront,
@@ -237,6 +241,21 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
             <p className="mt-1 text-xs text-slate-400 text-right">
               {bio.length}/240
             </p>
+          </Field>
+
+          <Field
+            label="Contact email"
+            hint="Public — shown as a mailto link on your kit so brands can reach you."
+          >
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="hello@yourdomain.com"
+              maxLength={120}
+              autoComplete="off"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
           </Field>
 
           <Field label="Location">
