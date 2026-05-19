@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
         hostname: "nickawqnasvpmyrsgwdk.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      // YouTube thumbnails for the Portfolio card.
+      {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+        pathname: "/vi/**",
+      },
     ],
   },
 };

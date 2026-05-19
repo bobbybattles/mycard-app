@@ -6,6 +6,9 @@ import ProfileCardEditor, {
 } from "@/components/cards/profile-card-editor";
 import MetricsCardEditor from "@/components/cards/metrics-card-editor";
 import type { MetricsCardData } from "@/lib/metrics-schema";
+import PortfolioCardEditor, {
+  type PortfolioCardData,
+} from "@/components/cards/portfolio-card-editor";
 
 // Main dashboard.
 // If the user hasn't picked a username yet, send them to onboarding first.
@@ -46,8 +49,8 @@ export default async function DashboardPage() {
     );
   }
 
-  // Load both the profile card and the metrics card in parallel.
-  const [profileCardRes, metricsCardRes] = await Promise.all([
+  // Load all editable cards in parallel.
+  const [profileCardRes, metricsCardRes, portfolioCardRes] = await Promise.all([
     supabase
       .from("cards")
       .select("id, data, is_visible")
@@ -60,10 +63,17 @@ export default async function DashboardPage() {
       .eq("kit_id", kit.id)
       .eq("card_type", "metrics")
       .maybeSingle(),
+    supabase
+      .from("cards")
+      .select("id, data, is_visible")
+      .eq("kit_id", kit.id)
+      .eq("card_type", "portfolio")
+      .maybeSingle(),
   ]);
 
   const profileCard = profileCardRes.data;
   const metricsCard = metricsCardRes.data;
+  const portfolioCard = portfolioCardRes.data;
 
   return (
     <main className="flex-1 px-6 py-10 bg-slate-50">
@@ -109,9 +119,22 @@ export default async function DashboardPage() {
           }
         />
 
+        <PortfolioCardEditor
+          kitId={kit.id}
+          card={
+            portfolioCard
+              ? {
+                  id: portfolioCard.id,
+                  data: (portfolioCard.data ?? { videos: [] }) as PortfolioCardData,
+                  is_visible: portfolioCard.is_visible,
+                }
+              : null
+          }
+        />
+
         <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
           <p className="text-slate-500 text-sm">
-            More cards coming next: socials, portfolio, brand collabs, rate card, and contact.
+            More cards coming next: socials, brand collabs, rate card, and contact.
           </p>
         </div>
 

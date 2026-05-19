@@ -5,6 +5,8 @@ import ProfileCard from "@/components/cards/profile-card";
 import type { ProfileCardData } from "@/components/cards/profile-card-editor";
 import MetricsCard from "@/components/cards/metrics-card";
 import { hasAnyMetric, type MetricsCardData } from "@/lib/metrics-schema";
+import PortfolioCard from "@/components/cards/portfolio-card";
+import type { PortfolioCardData } from "@/components/cards/portfolio-card-editor";
 
 // Public kit page rendered at mycard.to/<username>.
 // Server-rendered for speed + SEO. RLS keeps unpublished kits 404 to outsiders.
@@ -43,10 +45,12 @@ export default async function PublicKitPage({
 
   const profileCard = cards?.find((c) => c.card_type === "profile");
   const metricsCard = cards?.find((c) => c.card_type === "metrics");
-  const knownTypes = new Set(["profile", "metrics"]);
+  const portfolioCard = cards?.find((c) => c.card_type === "portfolio");
+  const knownTypes = new Set(["profile", "metrics", "portfolio"]);
   const unknownCards = (cards ?? []).filter((c) => !knownTypes.has(c.card_type));
 
   const metricsData = (metricsCard?.data ?? {}) as MetricsCardData;
+  const portfolioData = (portfolioCard?.data ?? { videos: [] }) as PortfolioCardData;
 
   return (
     <main className="flex-1 bg-gradient-to-b from-pink-50 to-white">
@@ -59,6 +63,12 @@ export default async function PublicKitPage({
         {hasAnyMetric(metricsData) && (
           <div className="mt-12">
             <MetricsCard data={metricsData} />
+          </div>
+        )}
+
+        {portfolioData.videos && portfolioData.videos.length > 0 && (
+          <div className="mt-12">
+            <PortfolioCard data={portfolioData} />
           </div>
         )}
 
