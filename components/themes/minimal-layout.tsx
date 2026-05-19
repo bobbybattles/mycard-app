@@ -17,8 +17,9 @@ import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
 import LinkIcon from "@/components/cards/link-icon";
 import PlatformIcon from "@/components/cards/platform-icon";
-import StarEmblem, { LEVEL_LABELS } from "@/components/cards/star-emblem";
+import StarEmblem from "@/components/cards/star-emblem";
 import VideoPlayer from "@/components/cards/video-player";
+import CopyButton from "@/components/cards/copy-button";
 
 type Props = {
   slug: string;
@@ -49,14 +50,14 @@ export default function MinimalLayout({
     <main className="flex-1 bg-white text-slate-900">
       {/* Profile — compact horizontal card */}
       <section className="mx-auto max-w-3xl px-6 pt-10 pb-8">
-        <div className="flex flex-row items-start gap-4 sm:gap-6">
-          <div className="relative h-20 w-20 sm:h-28 sm:w-28 shrink-0 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center text-2xl font-light text-slate-600">
+        <div className="flex flex-row items-stretch gap-4 sm:gap-6">
+          <div className="relative w-24 sm:w-32 shrink-0 self-stretch rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center text-2xl font-light text-slate-600 min-h-[120px]">
             {profileData.photo_url ? (
               <Image
                 src={profileData.photo_url}
                 alt={displayName}
                 fill
-                sizes="(min-width: 640px) 112px, 80px"
+                sizes="(min-width: 640px) 128px, 96px"
                 className="object-cover"
                 unoptimized
                 priority
@@ -67,51 +68,50 @@ export default function MinimalLayout({
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extralight tracking-tight">
                 {displayName}
               </h1>
               {profileData.star_level && (
-                <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                  {LEVEL_LABELS[profileData.star_level]} Creator
+                <StarEmblem level={profileData.star_level} size={30} />
+              )}
+            </div>
+
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs uppercase tracking-[0.25em]">
+              {profileData.amazon_storefront ? (
+                <a
+                  href={profileData.amazon_storefront}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-slate-500 hover:text-slate-900 break-all"
+                >
+                  {prettyUrl(profileData.amazon_storefront)}
+                </a>
+              ) : (
+                <span className="font-mono text-slate-500">mycard.to/{slug}</span>
+              )}
+
+              {profileData.email && (
+                <span className="inline-flex items-center gap-0.5">
+                  <a
+                    href={`mailto:${profileData.email}`}
+                    className="text-slate-500 hover:text-slate-900 break-all"
+                  >
+                    {profileData.email}
+                  </a>
+                  <CopyButton value={profileData.email} className="text-slate-500 hover:text-slate-900" />
                 </span>
               )}
             </div>
 
-            {profileData.amazon_storefront ? (
-              <a
-                href={profileData.amazon_storefront}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 inline-block text-[10px] sm:text-xs font-mono uppercase tracking-[0.3em] text-slate-500 hover:text-slate-900 break-all"
-              >
-                {prettyUrl(profileData.amazon_storefront)}
-              </a>
-            ) : (
-              <p className="mt-1 text-[10px] sm:text-xs font-mono uppercase tracking-[0.3em] text-slate-500">
-                mycard.to/{slug}
-              </p>
-            )}
-
             {profileData.bio && (
-              <p className="mt-3 text-sm leading-relaxed text-slate-700 font-light">
+              <p className="mt-2 text-sm leading-relaxed text-slate-700 font-light">
                 {profileData.bio}
               </p>
             )}
 
-            {profileData.email && (
-              <p className="mt-3 text-[10px] sm:text-xs uppercase tracking-[0.25em]">
-                <a
-                  href={`mailto:${profileData.email}`}
-                  className="text-slate-500 hover:text-slate-900 break-all"
-                >
-                  {profileData.email}
-                </a>
-              </p>
-            )}
-
             {profileData.location && (
-              <p className="mt-1 text-[10px] sm:text-xs uppercase tracking-[0.25em] text-slate-500">
+              <p className="mt-2 text-[10px] sm:text-xs uppercase tracking-[0.25em] text-slate-500">
                 {profileData.location}
               </p>
             )}

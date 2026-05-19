@@ -17,8 +17,9 @@ import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
 import LinkIcon from "@/components/cards/link-icon";
 import PlatformIcon from "@/components/cards/platform-icon";
-import StarEmblem, { LEVEL_LABELS } from "@/components/cards/star-emblem";
+import StarEmblem from "@/components/cards/star-emblem";
 import VideoPlayer from "@/components/cards/video-player";
+import CopyButton from "@/components/cards/copy-button";
 
 type Props = {
   slug: string;
@@ -56,14 +57,14 @@ export default function SunsetLayout({
       <div className="mx-auto max-w-5xl px-6 py-10">
         {/* Profile — compact horizontal card */}
         <section className="rounded-3xl bg-white/60 backdrop-blur px-5 py-5 sm:px-7 sm:py-6 shadow-xl">
-          <div className="flex flex-row items-start gap-4 sm:gap-6">
-            <div className="relative h-24 w-24 sm:h-36 sm:w-36 shrink-0 rounded-2xl overflow-hidden bg-orange-200 shadow-lg ring-2 ring-white/70">
+          <div className="flex flex-row items-stretch gap-4 sm:gap-6">
+            <div className="relative w-28 sm:w-36 shrink-0 self-stretch rounded-2xl overflow-hidden bg-orange-200 shadow-lg ring-2 ring-white/70 min-h-[120px]">
               {profileData.photo_url ? (
                 <Image
                   src={profileData.photo_url}
                   alt={displayName}
                   fill
-                  sizes="(min-width: 640px) 144px, 96px"
+                  sizes="(min-width: 640px) 144px, 112px"
                   className="object-cover"
                   unoptimized
                   priority
@@ -81,29 +82,36 @@ export default function SunsetLayout({
                   {displayName}
                 </h1>
                 {profileData.star_level && (
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-white/70 backdrop-blur px-2.5 py-1 shadow-sm">
-                    <StarEmblem level={profileData.star_level} size={18} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-orange-900">
-                      {LEVEL_LABELS[profileData.star_level]}
-                    </span>
-                  </div>
+                  <StarEmblem level={profileData.star_level} size={32} />
                 )}
               </div>
 
-              {profileData.amazon_storefront ? (
-                <a
-                  href={profileData.amazon_storefront}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-block text-xs sm:text-sm font-mono font-bold text-orange-800 hover:text-orange-950 underline underline-offset-4 decoration-orange-400 decoration-2 break-all"
-                >
-                  {prettyUrl(profileData.amazon_storefront)}
-                </a>
-              ) : (
-                <p className="mt-1 text-xs sm:text-sm font-mono text-orange-800">
-                  mycard.to/{slug}
-                </p>
-              )}
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm font-semibold">
+                {profileData.amazon_storefront ? (
+                  <a
+                    href={profileData.amazon_storefront}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono font-bold text-orange-800 hover:text-orange-950 underline underline-offset-4 decoration-orange-400 decoration-2 break-all"
+                  >
+                    {prettyUrl(profileData.amazon_storefront)}
+                  </a>
+                ) : (
+                  <span className="font-mono text-orange-800">mycard.to/{slug}</span>
+                )}
+
+                {profileData.email && (
+                  <span className="inline-flex items-center gap-0.5">
+                    <a
+                      href={`mailto:${profileData.email}`}
+                      className="text-orange-900 hover:text-orange-950 underline underline-offset-4 break-all"
+                    >
+                      ✉ {profileData.email}
+                    </a>
+                    <CopyButton value={profileData.email} className="text-orange-900 hover:text-orange-950" />
+                  </span>
+                )}
+              </div>
 
               {profileData.bio && (
                 <p className="mt-2 text-sm leading-relaxed font-medium text-orange-950/85">
@@ -111,19 +119,8 @@ export default function SunsetLayout({
                 </p>
               )}
 
-              {profileData.email && (
-                <p className="mt-3 text-xs sm:text-sm font-semibold">
-                  <a
-                    href={`mailto:${profileData.email}`}
-                    className="text-orange-900 hover:text-orange-950 underline underline-offset-4 break-all"
-                  >
-                    ✉ {profileData.email}
-                  </a>
-                </p>
-              )}
-
               {profileData.location && (
-                <p className="mt-1 text-xs sm:text-sm font-semibold text-orange-900/80">
+                <p className="mt-2 text-xs sm:text-sm font-semibold text-orange-900/80">
                   📍 {profileData.location}
                 </p>
               )}

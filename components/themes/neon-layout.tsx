@@ -17,8 +17,9 @@ import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
 import LinkIcon from "@/components/cards/link-icon";
 import PlatformIcon from "@/components/cards/platform-icon";
-import StarEmblem, { LEVEL_LABELS } from "@/components/cards/star-emblem";
+import StarEmblem from "@/components/cards/star-emblem";
 import VideoPlayer from "@/components/cards/video-player";
+import CopyButton from "@/components/cards/copy-button";
 
 type Props = {
   slug: string;
@@ -67,20 +68,20 @@ export default function NeonLayout({
       <div className="relative mx-auto max-w-5xl px-6 py-10 z-10">
         {/* Profile — compact horizontal card with glow ring around photo */}
         <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-5 py-5 sm:px-7 sm:py-6 shadow-2xl">
-          <div className="flex flex-row items-start gap-4 sm:gap-6">
-            <div className="relative shrink-0">
+          <div className="flex flex-row items-stretch gap-4 sm:gap-6">
+            <div className="relative shrink-0 w-28 sm:w-36 self-stretch min-h-[120px]">
               <div
                 aria-hidden
                 className="absolute inset-0 -m-1.5 rounded-2xl blur-lg opacity-70"
                 style={{ background: "linear-gradient(135deg, #ec4899, #22d3ee)" }}
               />
-              <div className="relative h-24 w-24 sm:h-32 sm:w-32 rounded-2xl overflow-hidden bg-slate-800 ring-2 ring-cyan-300/50 flex items-center justify-center text-3xl font-bold text-cyan-200">
+              <div className="relative w-full h-full rounded-2xl overflow-hidden bg-slate-800 ring-2 ring-cyan-300/50 flex items-center justify-center text-3xl font-bold text-cyan-200">
                 {profileData.photo_url ? (
                   <Image
                     src={profileData.photo_url}
                     alt={displayName}
                     fill
-                    sizes="(min-width: 640px) 128px, 96px"
+                    sizes="(min-width: 640px) 144px, 112px"
                     className="object-cover"
                     unoptimized
                     priority
@@ -106,29 +107,36 @@ export default function NeonLayout({
                   {displayName}
                 </h1>
                 {profileData.star_level && (
-                  <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-2.5 py-1">
-                    <StarEmblem level={profileData.star_level} size={18} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-200">
-                      {LEVEL_LABELS[profileData.star_level]}
-                    </span>
-                  </div>
+                  <StarEmblem level={profileData.star_level} size={32} />
                 )}
               </div>
 
-              {profileData.amazon_storefront ? (
-                <a
-                  href={profileData.amazon_storefront}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-block text-xs sm:text-sm font-mono text-cyan-300 hover:text-cyan-100 break-all"
-                >
-                  {prettyUrl(profileData.amazon_storefront)}
-                </a>
-              ) : (
-                <p className="mt-1 text-xs sm:text-sm font-mono text-slate-400">
-                  mycard.to/{slug}
-                </p>
-              )}
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm">
+                {profileData.amazon_storefront ? (
+                  <a
+                    href={profileData.amazon_storefront}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-cyan-300 hover:text-cyan-100 break-all"
+                  >
+                    {prettyUrl(profileData.amazon_storefront)}
+                  </a>
+                ) : (
+                  <span className="font-mono text-slate-400">mycard.to/{slug}</span>
+                )}
+
+                {profileData.email && (
+                  <span className="inline-flex items-center gap-0.5">
+                    <a
+                      href={`mailto:${profileData.email}`}
+                      className="text-pink-300 hover:text-pink-100 break-all"
+                    >
+                      ✉ {profileData.email}
+                    </a>
+                    <CopyButton value={profileData.email} className="text-pink-300 hover:text-pink-100" />
+                  </span>
+                )}
+              </div>
 
               {profileData.bio && (
                 <p className="mt-2 text-sm text-slate-300 leading-relaxed">
@@ -136,19 +144,8 @@ export default function NeonLayout({
                 </p>
               )}
 
-              {profileData.email && (
-                <p className="mt-3 text-xs sm:text-sm">
-                  <a
-                    href={`mailto:${profileData.email}`}
-                    className="text-pink-300 hover:text-pink-100 break-all"
-                  >
-                    ✉ {profileData.email}
-                  </a>
-                </p>
-              )}
-
               {profileData.location && (
-                <p className="mt-1 text-xs sm:text-sm text-slate-400">
+                <p className="mt-2 text-xs sm:text-sm text-slate-400">
                   📍 {profileData.location}
                 </p>
               )}

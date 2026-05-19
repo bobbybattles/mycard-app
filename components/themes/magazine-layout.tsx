@@ -17,8 +17,9 @@ import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
 import LinkIcon from "@/components/cards/link-icon";
 import PlatformIcon from "@/components/cards/platform-icon";
-import StarEmblem, { LEVEL_LABELS } from "@/components/cards/star-emblem";
+import StarEmblem from "@/components/cards/star-emblem";
 import VideoPlayer from "@/components/cards/video-player";
+import CopyButton from "@/components/cards/copy-button";
 
 type Props = {
   slug: string;
@@ -49,18 +50,18 @@ export default function MagazineLayout({
     <main className="flex-1 bg-amber-50 font-sans text-slate-900">
       {/* Hero — compact editorial card */}
       <section className="border-b-4 border-slate-900">
-        <div className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mx-auto max-w-5xl px-6 py-6">
           <p className="text-[10px] uppercase tracking-[0.4em] text-slate-600 font-semibold mb-3">
             Media Kit · No. 01
           </p>
-          <div className="flex flex-row items-start gap-4 sm:gap-6">
-            <div className="relative h-28 w-24 sm:h-40 sm:w-32 shrink-0 bg-slate-900 overflow-hidden">
+          <div className="flex flex-row items-stretch gap-4 sm:gap-6">
+            <div className="relative w-28 sm:w-36 shrink-0 self-stretch bg-slate-900 overflow-hidden min-h-[140px]">
               {profileData.photo_url ? (
                 <Image
                   src={profileData.photo_url}
                   alt={displayName}
                   fill
-                  sizes="(min-width: 640px) 128px, 96px"
+                  sizes="(min-width: 640px) 144px, 112px"
                   className="object-cover"
                   unoptimized
                   priority
@@ -78,29 +79,36 @@ export default function MagazineLayout({
                   {displayName}
                 </h1>
                 {profileData.star_level && (
-                  <div className="inline-flex items-center gap-1.5 border-2 border-slate-900 px-2 py-1">
-                    <StarEmblem level={profileData.star_level} size={18} />
-                    <span className="text-[10px] uppercase tracking-widest font-bold">
-                      {LEVEL_LABELS[profileData.star_level]}
-                    </span>
-                  </div>
+                  <StarEmblem level={profileData.star_level} size={32} />
                 )}
               </div>
 
-              {profileData.amazon_storefront ? (
-                <a
-                  href={profileData.amazon_storefront}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-block text-xs sm:text-sm font-mono text-slate-700 hover:text-slate-900 underline underline-offset-4 decoration-2 break-all"
-                >
-                  {prettyUrl(profileData.amazon_storefront)}
-                </a>
-              ) : (
-                <p className="mt-1 text-xs sm:text-sm font-mono text-slate-700">
-                  mycard.to/{slug}
-                </p>
-              )}
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm">
+                {profileData.amazon_storefront ? (
+                  <a
+                    href={profileData.amazon_storefront}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-slate-700 hover:text-slate-900 underline underline-offset-4 decoration-2 break-all"
+                  >
+                    {prettyUrl(profileData.amazon_storefront)}
+                  </a>
+                ) : (
+                  <span className="font-mono text-slate-700">mycard.to/{slug}</span>
+                )}
+
+                {profileData.email && (
+                  <span className="inline-flex items-center gap-0.5">
+                    <a
+                      href={`mailto:${profileData.email}`}
+                      className="underline underline-offset-4 break-all"
+                    >
+                      ✉ {profileData.email}
+                    </a>
+                    <CopyButton value={profileData.email} className="text-slate-700 hover:text-slate-900" />
+                  </span>
+                )}
+              </div>
 
               {profileData.bio && (
                 <p className="mt-2 text-sm sm:text-base leading-relaxed text-slate-800 font-serif">
@@ -108,19 +116,8 @@ export default function MagazineLayout({
                 </p>
               )}
 
-              {profileData.email && (
-                <p className="mt-3 text-xs sm:text-sm">
-                  <a
-                    href={`mailto:${profileData.email}`}
-                    className="inline-flex items-center gap-2 underline underline-offset-4 break-all"
-                  >
-                    ✉ {profileData.email}
-                  </a>
-                </p>
-              )}
-
               {profileData.location && (
-                <p className="mt-1 text-xs sm:text-sm">
+                <p className="mt-2 text-xs sm:text-sm">
                   <span className="inline-flex items-center gap-2 text-slate-700">
                     📍 {profileData.location}
                   </span>
