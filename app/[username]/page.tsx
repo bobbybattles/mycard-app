@@ -104,30 +104,36 @@ export default async function PublicKitPage({
   // card_types for debugging until those get proper renderers.
   return (
     <main className="flex-1 bg-gradient-to-b from-pink-50 to-white">
-      <div className="mx-auto max-w-7xl px-6 py-16">
-        <ProfileCard username={kitSlug} data={profileData} />
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 py-8">
+        {/* Top row: profile on the left, Find Me as a side card on the right */}
+        <div
+          className={
+            resolvedLinks.length > 0
+              ? "grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 items-stretch"
+              : ""
+          }
+        >
+          <ProfileCard username={kitSlug} data={profileData} />
+          {resolvedLinks.length > 0 && (
+            <PlatformLinks links={resolvedLinks} asCard />
+          )}
+        </div>
 
         {hasAnyMetric(metricsData) && (
-          <div className="mt-12">
+          <div className="mt-8">
             <MetricsCard data={metricsData} />
           </div>
         )}
 
-        {resolvedLinks.length > 0 && (
-          <div className="mt-12">
-            <PlatformLinks links={resolvedLinks} />
-          </div>
-        )}
-
         {hasAnyRate(ratesData) && (
-          <div className="mt-12">
+          <div className="mt-8">
             <RatesCard data={ratesData} />
           </div>
         )}
 
         {((portfolioData.groups && portfolioData.groups.length > 0) ||
           (portfolioData.videos && portfolioData.videos.length > 0)) && (
-          <div className="mt-14">
+          <div className="mt-10">
             <PortfolioCard data={portfolioData} />
           </div>
         )}
@@ -150,7 +156,7 @@ export default async function PublicKitPage({
           </div>
         )}
 
-        <footer className="mt-16 text-center text-xs text-slate-400">
+        <footer className="mt-10 text-center text-xs text-slate-400">
           <p>
             Made with{" "}
             <Link href="/" className="text-pink-600 hover:underline">

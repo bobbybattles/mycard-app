@@ -25,7 +25,7 @@ export default function ProfileCard({ username, data }: Props) {
   const initial = (data.name?.[0] ?? username[0] ?? "?").toUpperCase();
 
   return (
-    <header className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white px-5 py-5 sm:px-7 sm:py-6 shadow-sm">
+    <header className="rounded-2xl border border-slate-200 bg-white px-5 py-5 sm:px-7 sm:py-6 shadow-sm h-full">
       <div className="flex flex-row items-stretch gap-4 sm:gap-6">
         <div className="relative w-28 sm:w-36 shrink-0 self-stretch rounded-2xl overflow-hidden bg-pink-100 min-h-[120px]">
           {data.photo_url ? (

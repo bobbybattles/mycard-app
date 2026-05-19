@@ -36,32 +36,30 @@ export default function PortfolioCard({ data }: Props) {
 
   return (
     <section>
-      <header className="text-center mb-8">
-        <p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-600">
-          Portfolio
-        </p>
-      </header>
+      <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4">
+        Portfolio
+      </h2>
 
-      <div className="space-y-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-8">
         {groups.map((group) => {
           const cfg = PLATFORMS[group.platform];
           return (
-            <div key={group.id}>
-              <div className="flex items-center gap-3 mb-4 justify-center sm:justify-start">
-                <PlatformIcon platform={group.platform} size={36} />
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 leading-tight">
+            <div key={group.id} className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+              <div className="flex items-center gap-2.5 mb-3">
+                <PlatformIcon platform={group.platform} size={28} />
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-slate-900 leading-tight truncate">
                     {cfg.label}
                   </h3>
                   {group.label && (
-                    <p className="text-xs text-slate-600 leading-tight">
+                    <p className="text-xs text-slate-600 leading-tight truncate">
                       {group.label}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {group.videos.map((video, i) => {
                   const title = video.title?.trim() || cfg.label + " video";
                   return (
