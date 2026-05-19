@@ -15,22 +15,27 @@ type Props = {
 };
 
 // Public render of the Metrics card (Classic theme).
-// Renders each platform group (Amazon, TikTok Shop) as its own labeled block
-// with its own timeframe and stat sub-sections.
+// Wide platform groups (multi-section, e.g. Amazon) render full-width.
+// Compact platform groups (single-section, e.g. TikTok Shop, YouTube)
+// render side-by-side on desktop so the page stays dense.
 export default function MetricsCard({ data }: Props) {
   const norm = normalizeMetrics(data);
   const visibleGroups = PLATFORM_GROUPS.filter((g) => groupHasAnyMetric(norm[g.id], g));
   if (visibleGroups.length === 0) return null;
 
   return (
-    <div className="space-y-12">
-      {visibleGroups.map((group) => (
-        <PlatformGroupBlock
-          key={group.id}
-          group={group}
-          groupData={norm[group.id]}
-        />
-      ))}
+    <div className="flex flex-wrap gap-x-6 gap-y-10">
+      {visibleGroups.map((group) => {
+        const isCompact = group.sections.length === 1;
+        return (
+          <div
+            key={group.id}
+            className={isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}
+          >
+            <PlatformGroupBlock group={group} groupData={norm[group.id]} />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -66,7 +71,6 @@ function PlatformGroupBlock({
           const filled = section.metrics.filter(
             (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
           );
-          const cols = Math.min(Math.max(Math.ceil(filled.length / 2), 1), 5);
           return (
             <div
               key={section.id}
@@ -75,10 +79,7 @@ function PlatformGroupBlock({
               <h3 className="text-sm font-bold uppercase tracking-wide text-slate-900 pb-3 border-b border-slate-200">
                 {section.title}
               </h3>
-              <div
-                className="mt-4 grid grid-rows-2 grid-flow-col gap-x-5 gap-y-4"
-                style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-              >
+              <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-4">
                 {filled.map((metric) => (
                   <div key={metric.key} className="min-w-0">
                     <p className="text-[11px] text-slate-500 uppercase tracking-wide leading-tight">

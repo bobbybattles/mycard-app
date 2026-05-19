@@ -131,12 +131,13 @@ export default function SunsetLayout({
           </div>
         </section>
 
-        {/* Performance — one block per platform group, warm cream cards */}
+        {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
         {hasAnyMetric(metricsData) && (
-          <section className="mt-14 space-y-12">
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
+          <section className="mt-12">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-6">
               The Numbers
             </h2>
+            <div className="flex flex-wrap gap-x-6 gap-y-10">
             {PLATFORM_GROUPS.filter((g) =>
               groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
             ).map((group) => {
@@ -144,8 +145,12 @@ export default function SunsetLayout({
               const visibleSections = group.sections.filter((s) =>
                 sectionHasAnyMetric(groupData, s.id, s)
               );
+              const isCompact = group.sections.length === 1;
               return (
-                <div key={group.id}>
+                <div
+                  key={group.id}
+                  className={isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}
+                >
                   <div className="flex items-baseline justify-between mb-5">
                     <h3 className="text-2xl font-black tracking-tight text-orange-950">
                       {group.label}
@@ -189,6 +194,7 @@ export default function SunsetLayout({
                 </div>
               );
             })}
+            </div>
           </section>
         )}
 

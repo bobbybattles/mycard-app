@@ -97,7 +97,26 @@ export const TIKTOK_SHOP_SECTIONS: MetricSection[] = [
   },
 ];
 
-export type PlatformGroupId = "amazon" | "tiktok_shop";
+// =========================================================================
+// YouTube — one section with channel performance + commerce metrics.
+// =========================================================================
+export const YOUTUBE_SECTIONS: MetricSection[] = [
+  {
+    id: "channel",
+    title: "Channel performance",
+    metrics: [
+      { key: "subscribers", label: "Subscribers", placeholder: "12,345", format: "number" },
+      { key: "views", label: "Views", placeholder: "1,234,567", format: "number" },
+      { key: "watch_time_hours", label: "Watch Time (Hours)", placeholder: "5,432", format: "number" },
+      { key: "estimated_revenue", label: "Estimated Revenue", placeholder: "$1,234.56", format: "currency" },
+      { key: "total_sales", label: "Total Sales", placeholder: "$5,678.90", format: "currency" },
+      { key: "orders", label: "Orders", placeholder: "456", format: "number" },
+      { key: "product_clicks", label: "Product Clicks", placeholder: "789", format: "number" },
+    ],
+  },
+];
+
+export type PlatformGroupId = "amazon" | "tiktok_shop" | "youtube";
 
 export type PlatformGroupConfig = {
   id: PlatformGroupId;
@@ -110,6 +129,7 @@ export type PlatformGroupConfig = {
 export const PLATFORM_GROUPS: PlatformGroupConfig[] = [
   { id: "amazon", label: "Amazon", sections: AMAZON_SECTIONS },
   { id: "tiktok_shop", label: "TikTok Shop", sections: TIKTOK_SHOP_SECTIONS },
+  { id: "youtube", label: "YouTube", sections: YOUTUBE_SECTIONS },
 ];
 
 // Per-platform data: timeframe + each section's metrics keyed by sectionId.
@@ -121,6 +141,7 @@ export type PlatformGroupData = {
   onsite?: Record<MetricKey, string>;
   creator_connections?: Record<MetricKey, string>;
   shop?: Record<MetricKey, string>;
+  channel?: Record<MetricKey, string>;
 };
 
 /** Read a section's metrics by sectionId (handles the dynamic key lookup). */
@@ -138,6 +159,7 @@ export function getSectionMetrics(
 export type MetricsCardData = {
   amazon?: PlatformGroupData;
   tiktok_shop?: PlatformGroupData;
+  youtube?: PlatformGroupData;
 
   // -------- LEGACY (pre-platform-groups) — read-only for backward compat. --------
   /** Old global timeframe — treated as the Amazon timeframe when migrating. */
@@ -160,12 +182,16 @@ export const TIMEFRAME_OPTIONS: string[] = [
 ];
 
 /**
- * Normalize the data to always have both `amazon` and `tiktok_shop` keys,
+ * Normalize the data to always have all platform group keys present,
  * migrating any legacy flat fields into the `amazon` group transparently.
  */
 export function normalizeMetrics(
   data: MetricsCardData | undefined | null
-): { amazon: PlatformGroupData; tiktok_shop: PlatformGroupData } {
+): {
+  amazon: PlatformGroupData;
+  tiktok_shop: PlatformGroupData;
+  youtube: PlatformGroupData;
+} {
   const d = data ?? {};
   const amazon: PlatformGroupData = d.amazon
     ? d.amazon
@@ -176,7 +202,8 @@ export function normalizeMetrics(
         creator_connections: d.creator_connections,
       };
   const tiktok_shop: PlatformGroupData = d.tiktok_shop ?? {};
-  return { amazon, tiktok_shop };
+  const youtube: PlatformGroupData = d.youtube ?? {};
+  return { amazon, tiktok_shop, youtube };
 }
 
 /** True if any metric in any platform group has a non-empty value. */

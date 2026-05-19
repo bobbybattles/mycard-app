@@ -131,19 +131,24 @@ export default function MagazineLayout({
         </div>
       </section>
 
-      {/* Performance — one block per platform group (Amazon, TikTok Shop) */}
+      {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
       {hasAnyMetric(metricsData) && (
         <section className="border-b-4 border-slate-900 bg-slate-900 text-amber-50">
-          <div className="mx-auto max-w-6xl px-6 py-10 space-y-10">
-            <h2 className="font-serif text-3xl sm:text-4xl font-black tracking-tight">
+          <div className="mx-auto max-w-6xl px-6 py-10">
+            <h2 className="font-serif text-3xl sm:text-4xl font-black tracking-tight mb-8">
               The Numbers
             </h2>
+            <div className="flex flex-wrap gap-x-8 gap-y-10">
             {PLATFORM_GROUPS.filter((g) =>
               groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
             ).map((group) => {
               const groupData = normalizeMetrics(metricsData)[group.id];
+              const isCompact = group.sections.length === 1;
               return (
-                <div key={group.id} className="border-t-2 border-amber-200/30 pt-6">
+                <div
+                  key={group.id}
+                  className={`border-t-2 border-amber-200/30 pt-6 ${isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}`}
+                >
                   <div className="flex items-baseline justify-between gap-4 mb-5">
                     <p className="text-sm uppercase tracking-[0.3em] font-bold text-amber-200">
                       {group.label}
@@ -186,6 +191,7 @@ export default function MagazineLayout({
                 </div>
               );
             })}
+            </div>
           </div>
         </section>
       )}

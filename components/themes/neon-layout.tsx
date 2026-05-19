@@ -156,9 +156,9 @@ export default function NeonLayout({
           </div>
         </section>
 
-        {/* Performance — one block per platform group, glassmorphism cards */}
+        {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
         {hasAnyMetric(metricsData) && (
-          <section className="mt-16 space-y-12">
+          <section className="mt-12 flex flex-wrap gap-x-6 gap-y-10">
             {PLATFORM_GROUPS.filter((g) =>
               groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
             ).map((group) => {
@@ -166,9 +166,13 @@ export default function NeonLayout({
               const visibleSections = group.sections.filter((s) =>
                 sectionHasAnyMetric(groupData, s.id, s)
               );
+              const isCompact = group.sections.length === 1;
               return (
-                <div key={group.id}>
-                  <header className="text-center mb-8">
+                <div
+                  key={group.id}
+                  className={isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}
+                >
+                  <header className="text-center mb-6">
                     <p className="text-xs font-bold uppercase tracking-[0.4em] text-cyan-300">
                       {group.label}
                     </p>
@@ -190,14 +194,14 @@ export default function NeonLayout({
                           <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-300 pb-3 border-b border-white/10">
                             {section.title}
                           </h3>
-                          <div className="mt-4 space-y-4">
+                          <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">
                             {filled.map((metric) => (
-                              <div key={metric.key}>
+                              <div key={metric.key} className="min-w-0">
                                 <p className="text-[10px] uppercase tracking-wider text-slate-400">
                                   {metric.label}
                                 </p>
                                 <p
-                                  className="mt-0.5 text-2xl font-bold tabular-nums"
+                                  className="mt-0.5 text-xl font-bold tabular-nums truncate"
                                   style={{
                                     background:
                                       "linear-gradient(90deg, #f472b6, #c4b5fd)",

@@ -119,16 +119,21 @@ export default function MinimalLayout({
         </div>
       </section>
 
-      {/* Performance — one block per platform group, huge numbers + hairlines */}
+      {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
       {hasAnyMetric(metricsData) && (
         <section className="border-t border-slate-200">
-          <div className="mx-auto max-w-5xl px-6 py-16 space-y-16">
+          <div className="mx-auto max-w-5xl px-6 py-16">
+            <div className="flex flex-wrap gap-x-12 gap-y-16">
             {PLATFORM_GROUPS.filter((g) =>
               groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
             ).map((group) => {
               const groupData = normalizeMetrics(metricsData)[group.id];
+              const isCompact = group.sections.length === 1;
               return (
-                <div key={group.id}>
+                <div
+                  key={group.id}
+                  className={isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}
+                >
                   <div className="text-center mb-12">
                     <p className="text-[10px] uppercase tracking-[0.5em] text-slate-400">
                       {group.label}
@@ -171,6 +176,7 @@ export default function MinimalLayout({
                 </div>
               );
             })}
+            </div>
           </div>
         </section>
       )}
