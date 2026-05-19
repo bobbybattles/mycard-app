@@ -1,5 +1,6 @@
 import {
   METRIC_SECTIONS,
+  formatMetricValue,
   sectionHasAnyMetric,
   type MetricsCardData,
 } from "@/lib/metrics-schema";
@@ -68,7 +69,7 @@ export default function MetricsCard({ data }: Props) {
                       </p>
                     )}
                     <p className="mt-1 text-lg font-bold text-slate-900 tabular-nums truncate">
-                      {sectionData[metric.key]}
+                      {formatMetricValue(sectionData[metric.key], metric.format)}
                     </p>
                   </div>
                 ))}
