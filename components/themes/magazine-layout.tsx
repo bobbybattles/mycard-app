@@ -5,10 +5,12 @@ import type { PortfolioCardData } from "@/components/cards/portfolio-card-editor
 import type { MetricsCardData } from "@/lib/metrics-schema";
 import type { ProfileLink } from "@/lib/links";
 import {
-  METRIC_SECTIONS,
+  PLATFORM_GROUPS,
   formatMetricValue,
-  sectionHasAnyMetric,
+  groupHasAnyMetric,
   hasAnyMetric,
+  normalizeMetrics,
+  sectionHasAnyMetric,
 } from "@/lib/metrics-schema";
 import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
@@ -117,49 +119,61 @@ export default function MagazineLayout({
         </div>
       </section>
 
-      {/* Performance — wide horizontal strips per section */}
+      {/* Performance — one block per platform group (Amazon, TikTok Shop) */}
       {hasAnyMetric(metricsData) && (
         <section className="border-b-4 border-slate-900 bg-slate-900 text-amber-50">
-          <div className="mx-auto max-w-6xl px-6 py-10">
-            <div className="flex items-baseline justify-between gap-4 mb-6">
-              <h2 className="font-serif text-3xl sm:text-4xl font-black tracking-tight">
-                The Numbers
-              </h2>
-              {metricsData.timeframe && (
-                <p className="text-xs uppercase tracking-[0.3em] text-amber-200/70">
-                  {metricsData.timeframe}
-                </p>
-              )}
-            </div>
-            <div className="space-y-6">
-              {METRIC_SECTIONS.filter((s) => sectionHasAnyMetric(metricsData, s.id)).map(
-                (section) => {
-                  const sectionData = metricsData[section.id] ?? {};
-                  const filled = section.metrics.filter(
-                    (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
-                  );
-                  return (
-                    <div key={section.id} className="border-t-2 border-amber-200/30 pt-5">
-                      <p className="text-xs uppercase tracking-[0.3em] font-bold mb-3 text-amber-200">
-                        {section.title}
+          <div className="mx-auto max-w-6xl px-6 py-10 space-y-10">
+            <h2 className="font-serif text-3xl sm:text-4xl font-black tracking-tight">
+              The Numbers
+            </h2>
+            {PLATFORM_GROUPS.filter((g) =>
+              groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
+            ).map((group) => {
+              const groupData = normalizeMetrics(metricsData)[group.id];
+              return (
+                <div key={group.id} className="border-t-2 border-amber-200/30 pt-6">
+                  <div className="flex items-baseline justify-between gap-4 mb-5">
+                    <p className="text-sm uppercase tracking-[0.3em] font-bold text-amber-200">
+                      {group.label}
+                    </p>
+                    {groupData.timeframe && (
+                      <p className="text-xs uppercase tracking-[0.3em] text-amber-200/70">
+                        {groupData.timeframe}
                       </p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-5">
-                        {filled.map((metric) => (
-                          <div key={metric.key}>
-                            <p className="text-[10px] uppercase tracking-wider text-amber-200/70">
-                              {metric.label}
+                    )}
+                  </div>
+                  <div className="space-y-5">
+                    {group.sections
+                      .filter((s) => sectionHasAnyMetric(groupData, s.id, s))
+                      .map((section) => {
+                        const sectionData = groupData[section.id] ?? {};
+                        const filled = section.metrics.filter(
+                          (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
+                        );
+                        return (
+                          <div key={section.id}>
+                            <p className="text-[10px] uppercase tracking-[0.25em] text-amber-200/60 mb-2">
+                              {section.title}
                             </p>
-                            <p className="font-serif text-3xl font-black tabular-nums mt-0.5">
-                              {formatMetricValue(sectionData[metric.key], metric.format)}
-                            </p>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-4">
+                              {filled.map((metric) => (
+                                <div key={metric.key}>
+                                  <p className="text-[10px] uppercase tracking-wider text-amber-200/70">
+                                    {metric.label}
+                                  </p>
+                                  <p className="font-serif text-3xl font-black tabular-nums mt-0.5">
+                                    {formatMetricValue(sectionData[metric.key], metric.format)}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                }
-              )}
-            </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

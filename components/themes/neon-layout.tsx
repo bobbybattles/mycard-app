@@ -5,10 +5,12 @@ import type { PortfolioCardData } from "@/components/cards/portfolio-card-editor
 import type { MetricsCardData } from "@/lib/metrics-schema";
 import type { ProfileLink } from "@/lib/links";
 import {
-  METRIC_SECTIONS,
+  PLATFORM_GROUPS,
   formatMetricValue,
-  sectionHasAnyMetric,
+  groupHasAnyMetric,
   hasAnyMetric,
+  normalizeMetrics,
+  sectionHasAnyMetric,
 } from "@/lib/metrics-schema";
 import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
@@ -140,58 +142,68 @@ export default function NeonLayout({
           </div>
         </section>
 
-        {/* Performance — glassmorphism cards with neon numbers */}
+        {/* Performance — one block per platform group, glassmorphism cards */}
         {hasAnyMetric(metricsData) && (
-          <section className="mt-16">
-            <header className="text-center mb-8">
-              <p className="text-xs font-bold uppercase tracking-[0.4em] text-cyan-300">
-                Performance
-              </p>
-              {metricsData.timeframe && (
-                <p className="mt-1 text-sm text-slate-400">{metricsData.timeframe}</p>
-              )}
-            </header>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {METRIC_SECTIONS.filter((s) => sectionHasAnyMetric(metricsData, s.id)).map(
-                (section) => {
-                  const sectionData = metricsData[section.id] ?? {};
-                  const filled = section.metrics.filter(
-                    (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
-                  );
-                  return (
-                    <div
-                      key={section.id}
-                      className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 shadow-2xl"
-                    >
-                      <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-300 pb-3 border-b border-white/10">
-                        {section.title}
-                      </h3>
-                      <div className="mt-4 space-y-4">
-                        {filled.map((metric) => (
-                          <div key={metric.key}>
-                            <p className="text-[10px] uppercase tracking-wider text-slate-400">
-                              {metric.label}
-                            </p>
-                            <p
-                              className="mt-0.5 text-2xl font-bold tabular-nums"
-                              style={{
-                                background:
-                                  "linear-gradient(90deg, #f472b6, #c4b5fd)",
-                                WebkitBackgroundClip: "text",
-                                WebkitTextFillColor: "transparent",
-                                backgroundClip: "text",
-                              }}
-                            >
-                              {formatMetricValue(sectionData[metric.key], metric.format)}
-                            </p>
+          <section className="mt-16 space-y-12">
+            {PLATFORM_GROUPS.filter((g) =>
+              groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
+            ).map((group) => {
+              const groupData = normalizeMetrics(metricsData)[group.id];
+              const visibleSections = group.sections.filter((s) =>
+                sectionHasAnyMetric(groupData, s.id, s)
+              );
+              return (
+                <div key={group.id}>
+                  <header className="text-center mb-8">
+                    <p className="text-xs font-bold uppercase tracking-[0.4em] text-cyan-300">
+                      {group.label}
+                    </p>
+                    {groupData.timeframe && (
+                      <p className="mt-1 text-sm text-slate-400">{groupData.timeframe}</p>
+                    )}
+                  </header>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {visibleSections.map((section) => {
+                      const sectionData = groupData[section.id] ?? {};
+                      const filled = section.metrics.filter(
+                        (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
+                      );
+                      return (
+                        <div
+                          key={section.id}
+                          className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 shadow-2xl"
+                        >
+                          <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-300 pb-3 border-b border-white/10">
+                            {section.title}
+                          </h3>
+                          <div className="mt-4 space-y-4">
+                            {filled.map((metric) => (
+                              <div key={metric.key}>
+                                <p className="text-[10px] uppercase tracking-wider text-slate-400">
+                                  {metric.label}
+                                </p>
+                                <p
+                                  className="mt-0.5 text-2xl font-bold tabular-nums"
+                                  style={{
+                                    background:
+                                      "linear-gradient(90deg, #f472b6, #c4b5fd)",
+                                    WebkitBackgroundClip: "text",
+                                    WebkitTextFillColor: "transparent",
+                                    backgroundClip: "text",
+                                  }}
+                                >
+                                  {formatMetricValue(sectionData[metric.key], metric.format)}
+                                </p>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                }
-              )}
-            </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </section>
         )}
 

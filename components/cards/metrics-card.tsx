@@ -1,21 +1,48 @@
 import {
-  METRIC_SECTIONS,
+  PLATFORM_GROUPS,
   formatMetricValue,
+  groupHasAnyMetric,
+  normalizeMetrics,
   sectionHasAnyMetric,
   type MetricsCardData,
+  type PlatformGroupConfig,
+  type PlatformGroupData,
 } from "@/lib/metrics-schema";
 
 type Props = {
   data: MetricsCardData;
 };
 
-// Public render of the Metrics card.
-// Layout: one card per section (Offsite / Onsite / Creator Connections),
-// all on the same row. Inside each card, stats flow into exactly 2 rows
-// so the card grows horizontally as more metrics are filled in.
+// Public render of the Metrics card (Classic theme).
+// Renders each platform group (Amazon, TikTok Shop) as its own labeled block
+// with its own timeframe and stat sub-sections.
 export default function MetricsCard({ data }: Props) {
-  const visibleSections = METRIC_SECTIONS.filter((s) =>
-    sectionHasAnyMetric(data, s.id)
+  const norm = normalizeMetrics(data);
+  const visibleGroups = PLATFORM_GROUPS.filter((g) => groupHasAnyMetric(norm[g.id], g));
+  if (visibleGroups.length === 0) return null;
+
+  return (
+    <div className="space-y-12">
+      {visibleGroups.map((group) => (
+        <PlatformGroupBlock
+          key={group.id}
+          group={group}
+          groupData={norm[group.id]}
+        />
+      ))}
+    </div>
+  );
+}
+
+function PlatformGroupBlock({
+  group,
+  groupData,
+}: {
+  group: PlatformGroupConfig;
+  groupData: PlatformGroupData;
+}) {
+  const visibleSections = group.sections.filter((s) =>
+    sectionHasAnyMetric(groupData, s.id, s)
   );
   if (visibleSections.length === 0) return null;
 
@@ -23,27 +50,22 @@ export default function MetricsCard({ data }: Props) {
     <section>
       <header className="text-center mb-6">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-600">
-          Performance
+          {group.label}
         </p>
-        {data.timeframe && (
+        {groupData.timeframe && (
           <p className="mt-1 text-sm font-semibold text-slate-700">
-            {data.timeframe}
+            {groupData.timeframe}
           </p>
         )}
       </header>
 
-      {/* Cards row: stacks on mobile, flows side-by-side on md+.
-          Each card sizes to its content (flex-1 + flex-wrap), so a section
-          with more filled metrics naturally claims more horizontal room. */}
       <div className="flex flex-wrap justify-center gap-5">
         {visibleSections.map((section) => {
-          const sectionData = data[section.id] ?? {};
-          const filledMetrics = section.metrics.filter(
+          const sectionData = groupData[section.id] ?? {};
+          const filled = section.metrics.filter(
             (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
           );
-          // Number of columns inside this card = ceil(filled / 2), capped so
-          // very tall cards don't blow out the line width.
-          const cols = Math.min(Math.max(Math.ceil(filledMetrics.length / 2), 1), 5);
+          const cols = Math.min(Math.max(Math.ceil(filled.length / 2), 1), 5);
           return (
             <div
               key={section.id}
@@ -54,11 +76,9 @@ export default function MetricsCard({ data }: Props) {
               </h3>
               <div
                 className="mt-4 grid grid-rows-2 grid-flow-col gap-x-5 gap-y-4"
-                style={{
-                  gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-                }}
+                style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
               >
-                {filledMetrics.map((metric) => (
+                {filled.map((metric) => (
                   <div key={metric.key} className="min-w-0">
                     <p className="text-[11px] text-slate-500 uppercase tracking-wide leading-tight">
                       {metric.label}

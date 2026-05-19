@@ -1,10 +1,11 @@
-// Schema describing the Metrics card sections + which metrics live in each.
-// Drives both the dashboard editor and the public render.
+// Schema describing the Metrics card.
+//
+// Top-level structure: two PLATFORM groups (Amazon + TikTok Shop), each with
+// its own time frame. Each group has one or more sub-sections of metrics.
 //
 // Values are stored as free-text strings, but each metric carries a `format`
 // so the public renderer can present a bare number nicely (e.g. "5880.73" ->
-// "$5,880.73", "5.49" -> "5.49%", "133521" -> "133,521"). If the user typed
-// their own formatting (currency symbol, %, or commas), we render it verbatim.
+// "$5,880.73"). If the user typed their own formatting it's rendered verbatim.
 
 export type MetricKey = string;
 export type MetricFormat = "number" | "percent" | "currency";
@@ -12,21 +13,21 @@ export type MetricFormat = "number" | "percent" | "currency";
 export type MetricDef = {
   key: MetricKey;
   label: string;
-  /** Sub-label shown small under the main label (e.g. "Includes Bonus"). */
   hint?: string;
-  /** Example value shown as input placeholder. */
   placeholder: string;
-  /** How to format the value on the public kit if the user typed a bare number. */
   format: MetricFormat;
 };
 
 export type MetricSection = {
-  id: "offsite" | "onsite" | "creator_connections";
+  id: string;
   title: string;
   metrics: MetricDef[];
 };
 
-export const METRIC_SECTIONS: MetricSection[] = [
+// =========================================================================
+// Amazon — the existing three sub-sections.
+// =========================================================================
+export const AMAZON_SECTIONS: MetricSection[] = [
   {
     id: "offsite",
     title: "Offsite",
@@ -80,15 +81,56 @@ export const METRIC_SECTIONS: MetricSection[] = [
   },
 ];
 
+// =========================================================================
+// TikTok Shop — one section with the four standard creator-side metrics.
+// =========================================================================
+export const TIKTOK_SHOP_SECTIONS: MetricSection[] = [
+  {
+    id: "shop",
+    title: "Shop performance",
+    metrics: [
+      { key: "attr_gmv", label: "Attr. GMV", placeholder: "$1,234.56", format: "currency" },
+      { key: "attr_items_sold", label: "Attr. Items Sold", placeholder: "123", format: "number" },
+      { key: "product_impressions", label: "Product Impressions", placeholder: "10,000", format: "number" },
+      { key: "product_clicks", label: "Product Clicks", placeholder: "500", format: "number" },
+    ],
+  },
+];
+
+export type PlatformGroupId = "amazon" | "tiktok_shop";
+
+export type PlatformGroupConfig = {
+  id: PlatformGroupId;
+  /** Heading shown to brands on the public kit. */
+  label: string;
+  /** Sub-sections inside this platform group. */
+  sections: MetricSection[];
+};
+
+export const PLATFORM_GROUPS: PlatformGroupConfig[] = [
+  { id: "amazon", label: "Amazon", sections: AMAZON_SECTIONS },
+  { id: "tiktok_shop", label: "TikTok Shop", sections: TIKTOK_SHOP_SECTIONS },
+];
+
+// Per-platform data: timeframe + each section's metrics keyed by sectionId.
+export type PlatformGroupData = {
+  timeframe?: string;
+} & Partial<Record<string, Record<MetricKey, string>>>;
+
+// Persisted shape on cards.data for card_type = "metrics".
 export type MetricsCardData = {
-  /** Which time window these numbers cover. Shown on the public kit. */
+  amazon?: PlatformGroupData;
+  tiktok_shop?: PlatformGroupData;
+
+  // -------- LEGACY (pre-platform-groups) — read-only for backward compat. --------
+  /** Old global timeframe — treated as the Amazon timeframe when migrating. */
   timeframe?: string;
   offsite?: Record<MetricKey, string>;
   onsite?: Record<MetricKey, string>;
   creator_connections?: Record<MetricKey, string>;
 };
 
-/** Common timeframe presets shown in the metrics editor's dropdown. */
+/** Common timeframe presets shown in the editor dropdown. */
 export const TIMEFRAME_OPTIONS: string[] = [
   "Last 7 days",
   "Last 30 days",
@@ -100,30 +142,56 @@ export const TIMEFRAME_OPTIONS: string[] = [
   "All time",
 ];
 
-/** True if any metric in the entire card has a non-empty value. */
+/**
+ * Normalize the data to always have both `amazon` and `tiktok_shop` keys,
+ * migrating any legacy flat fields into the `amazon` group transparently.
+ */
+export function normalizeMetrics(
+  data: MetricsCardData | undefined | null
+): { amazon: PlatformGroupData; tiktok_shop: PlatformGroupData } {
+  const d = data ?? {};
+  const amazon: PlatformGroupData = d.amazon
+    ? d.amazon
+    : {
+        timeframe: d.timeframe,
+        offsite: d.offsite,
+        onsite: d.onsite,
+        creator_connections: d.creator_connections,
+      };
+  const tiktok_shop: PlatformGroupData = d.tiktok_shop ?? {};
+  return { amazon, tiktok_shop };
+}
+
+/** True if any metric in any platform group has a non-empty value. */
 export function hasAnyMetric(data: MetricsCardData | undefined | null): boolean {
-  if (!data) return false;
-  for (const section of METRIC_SECTIONS) {
-    const sectionData = data[section.id];
-    if (!sectionData) continue;
-    for (const metric of section.metrics) {
-      const v = sectionData[metric.key];
-      if (v && v.trim().length > 0) return true;
-    }
+  const norm = normalizeMetrics(data);
+  for (const group of PLATFORM_GROUPS) {
+    if (groupHasAnyMetric(norm[group.id], group)) return true;
   }
   return false;
 }
 
-/** True if a specific section has any non-empty metric. */
-export function sectionHasAnyMetric(
-  data: MetricsCardData | undefined | null,
-  sectionId: MetricSection["id"]
+/** True if a specific platform group has any non-empty metric. */
+export function groupHasAnyMetric(
+  groupData: PlatformGroupData | undefined,
+  group: PlatformGroupConfig
 ): boolean {
-  if (!data) return false;
-  const sectionData = data[sectionId];
+  if (!groupData) return false;
+  for (const section of group.sections) {
+    if (sectionHasAnyMetric(groupData, section.id, section)) return true;
+  }
+  return false;
+}
+
+/** True if a specific section inside a group has any non-empty metric. */
+export function sectionHasAnyMetric(
+  groupData: PlatformGroupData | undefined,
+  sectionId: string,
+  section: MetricSection
+): boolean {
+  if (!groupData) return false;
+  const sectionData = groupData[sectionId];
   if (!sectionData) return false;
-  const section = METRIC_SECTIONS.find((s) => s.id === sectionId);
-  if (!section) return false;
   return section.metrics.some(
     (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
   );
@@ -131,11 +199,7 @@ export function sectionHasAnyMetric(
 
 /**
  * Pretty-print a raw metric value for the public kit.
- *
- * If the value looks like a bare number (digits + optional single decimal),
- * we format it according to `format`. Otherwise we return it verbatim — this
- * preserves anything the user already styled themselves ("$5,880.73",
- * "5.49%", "1,000", "N/A", etc.).
+ * Bare numbers get formatted; user-typed formatting passes through verbatim.
  */
 export function formatMetricValue(value: string, format: MetricFormat): string {
   const trimmed = value.trim();
@@ -157,15 +221,17 @@ export function formatMetricValue(value: string, format: MetricFormat): string {
   }
 
   if (format === "percent") {
-    // Keep the user's original decimal precision (e.g. "5.49" -> "5.49%", "5" -> "5%").
     const decimals = trimmed.includes(".") ? trimmed.split(".")[1].length : 0;
     return `${num.toFixed(decimals)}%`;
   }
 
-  // "number" — comma-separated, preserving any decimals the user typed.
   const decimals = trimmed.includes(".") ? trimmed.split(".")[1].length : 0;
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(num);
 }
+
+// -------- Re-exports for backward compat with files that still import them. --------
+/** @deprecated Use AMAZON_SECTIONS or iterate PLATFORM_GROUPS. */
+export const METRIC_SECTIONS = AMAZON_SECTIONS;

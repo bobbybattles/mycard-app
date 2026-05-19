@@ -5,10 +5,12 @@ import type { PortfolioCardData } from "@/components/cards/portfolio-card-editor
 import type { MetricsCardData } from "@/lib/metrics-schema";
 import type { ProfileLink } from "@/lib/links";
 import {
-  METRIC_SECTIONS,
+  PLATFORM_GROUPS,
   formatMetricValue,
-  sectionHasAnyMetric,
+  groupHasAnyMetric,
   hasAnyMetric,
+  normalizeMetrics,
+  sectionHasAnyMetric,
 } from "@/lib/metrics-schema";
 import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
@@ -121,51 +123,64 @@ export default function SunsetLayout({
           </div>
         </section>
 
-        {/* Performance — warm cream cards */}
+        {/* Performance — one block per platform group, warm cream cards */}
         {hasAnyMetric(metricsData) && (
-          <section className="mt-14">
-            <div className="flex items-baseline justify-between mb-5">
-              <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
-                The Numbers
-              </h2>
-              {metricsData.timeframe && (
-                <p className="text-sm font-bold text-orange-800">
-                  {metricsData.timeframe}
-                </p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {METRIC_SECTIONS.filter((s) => sectionHasAnyMetric(metricsData, s.id)).map(
-                (section) => {
-                  const sectionData = metricsData[section.id] ?? {};
-                  const filled = section.metrics.filter(
-                    (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
-                  );
-                  return (
-                    <div
-                      key={section.id}
-                      className="rounded-3xl bg-orange-50/80 backdrop-blur p-5 shadow-xl"
-                    >
-                      <h3 className="text-sm font-black uppercase tracking-wider text-orange-900 pb-3 border-b border-orange-200">
-                        {section.title}
-                      </h3>
-                      <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">
-                        {filled.map((metric) => (
-                          <div key={metric.key}>
-                            <p className="text-[10px] uppercase tracking-wider text-orange-700 font-semibold">
-                              {metric.label}
-                            </p>
-                            <p className="mt-0.5 text-xl font-black tabular-nums text-orange-950">
-                              {formatMetricValue(sectionData[metric.key], metric.format)}
-                            </p>
+          <section className="mt-14 space-y-12">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
+              The Numbers
+            </h2>
+            {PLATFORM_GROUPS.filter((g) =>
+              groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
+            ).map((group) => {
+              const groupData = normalizeMetrics(metricsData)[group.id];
+              const visibleSections = group.sections.filter((s) =>
+                sectionHasAnyMetric(groupData, s.id, s)
+              );
+              return (
+                <div key={group.id}>
+                  <div className="flex items-baseline justify-between mb-5">
+                    <h3 className="text-2xl font-black tracking-tight text-orange-950">
+                      {group.label}
+                    </h3>
+                    {groupData.timeframe && (
+                      <p className="text-sm font-bold text-orange-800">
+                        {groupData.timeframe}
+                      </p>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {visibleSections.map((section) => {
+                      const sectionData = groupData[section.id] ?? {};
+                      const filled = section.metrics.filter(
+                        (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
+                      );
+                      return (
+                        <div
+                          key={section.id}
+                          className="rounded-3xl bg-orange-50/80 backdrop-blur p-5 shadow-xl"
+                        >
+                          <h4 className="text-sm font-black uppercase tracking-wider text-orange-900 pb-3 border-b border-orange-200">
+                            {section.title}
+                          </h4>
+                          <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">
+                            {filled.map((metric) => (
+                              <div key={metric.key}>
+                                <p className="text-[10px] uppercase tracking-wider text-orange-700 font-semibold">
+                                  {metric.label}
+                                </p>
+                                <p className="mt-0.5 text-xl font-black tabular-nums text-orange-950">
+                                  {formatMetricValue(sectionData[metric.key], metric.format)}
+                                </p>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                }
-              )}
-            </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </section>
         )}
 

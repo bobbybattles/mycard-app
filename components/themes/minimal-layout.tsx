@@ -5,10 +5,12 @@ import type { PortfolioCardData } from "@/components/cards/portfolio-card-editor
 import type { MetricsCardData } from "@/lib/metrics-schema";
 import type { ProfileLink } from "@/lib/links";
 import {
-  METRIC_SECTIONS,
+  PLATFORM_GROUPS,
   formatMetricValue,
-  sectionHasAnyMetric,
+  groupHasAnyMetric,
   hasAnyMetric,
+  normalizeMetrics,
+  sectionHasAnyMetric,
 } from "@/lib/metrics-schema";
 import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
@@ -105,49 +107,58 @@ export default function MinimalLayout({
         )}
       </section>
 
-      {/* Performance — huge numbers, hairline dividers */}
+      {/* Performance — one block per platform group, huge numbers + hairlines */}
       {hasAnyMetric(metricsData) && (
         <section className="border-t border-slate-200">
-          <div className="mx-auto max-w-5xl px-6 py-16">
-            <div className="text-center mb-12">
-              <p className="text-[10px] uppercase tracking-[0.5em] text-slate-400">
-                Performance
-              </p>
-              {metricsData.timeframe && (
-                <p className="mt-1 text-sm text-slate-600 font-light">
-                  {metricsData.timeframe}
-                </p>
-              )}
-            </div>
-            <div className="space-y-12">
-              {METRIC_SECTIONS.filter((s) => sectionHasAnyMetric(metricsData, s.id)).map(
-                (section) => {
-                  const sectionData = metricsData[section.id] ?? {};
-                  const filled = section.metrics.filter(
-                    (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
-                  );
-                  return (
-                    <div key={section.id}>
-                      <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400 text-center mb-6">
-                        {section.title}
+          <div className="mx-auto max-w-5xl px-6 py-16 space-y-16">
+            {PLATFORM_GROUPS.filter((g) =>
+              groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
+            ).map((group) => {
+              const groupData = normalizeMetrics(metricsData)[group.id];
+              return (
+                <div key={group.id}>
+                  <div className="text-center mb-12">
+                    <p className="text-[10px] uppercase tracking-[0.5em] text-slate-400">
+                      {group.label}
+                    </p>
+                    {groupData.timeframe && (
+                      <p className="mt-1 text-sm text-slate-600 font-light">
+                        {groupData.timeframe}
                       </p>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-10 text-center">
-                        {filled.map((metric) => (
-                          <div key={metric.key}>
-                            <p className="text-4xl sm:text-5xl font-extralight tabular-nums tracking-tight">
-                              {formatMetricValue(sectionData[metric.key], metric.format)}
+                    )}
+                  </div>
+                  <div className="space-y-12">
+                    {group.sections
+                      .filter((s) => sectionHasAnyMetric(groupData, s.id, s))
+                      .map((section) => {
+                        const sectionData = groupData[section.id] ?? {};
+                        const filled = section.metrics.filter(
+                          (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
+                        );
+                        return (
+                          <div key={section.id}>
+                            <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400 text-center mb-6">
+                              {section.title}
                             </p>
-                            <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                              {metric.label}
-                            </p>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-10 text-center">
+                              {filled.map((metric) => (
+                                <div key={metric.key}>
+                                  <p className="text-4xl sm:text-5xl font-extralight tabular-nums tracking-tight">
+                                    {formatMetricValue(sectionData[metric.key], metric.format)}
+                                  </p>
+                                  <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                                    {metric.label}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                }
-              )}
-            </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
