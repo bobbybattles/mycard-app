@@ -7,6 +7,15 @@ type Props = {
   data: ProfileCardData;
 };
 
+// Strip protocol + leading www + trailing slash so the displayed text reads
+// like "amazon.com/shop/handle" instead of the full URL.
+function prettifyUrl(url: string): string {
+  return url
+    .replace(/^https?:\/\//i, "")
+    .replace(/^www\./i, "")
+    .replace(/\/$/, "");
+}
+
 // Public render of the Profile card on mycard.to/<username>.
 // Server-rendered for speed + SEO.
 export default function ProfileCard({ username, data }: Props) {
@@ -35,9 +44,20 @@ export default function ProfileCard({ username, data }: Props) {
         {displayName}
       </h1>
 
-      <p className="mt-1 text-sm font-mono text-slate-500">
-        mycard.to/{username}
-      </p>
+      {data.amazon_storefront ? (
+        <a
+          href={data.amazon_storefront}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1 inline-block text-sm font-mono text-pink-600 hover:text-pink-700 hover:underline"
+        >
+          {prettifyUrl(data.amazon_storefront)}
+        </a>
+      ) : (
+        <p className="mt-1 text-sm font-mono text-slate-500">
+          mycard.to/{username}
+        </p>
+      )}
 
       {(data.niche || data.location) && (
         <p className="mt-3 text-sm text-slate-600">

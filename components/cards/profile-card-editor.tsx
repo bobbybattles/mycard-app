@@ -13,6 +13,8 @@ export type ProfileCardData = {
   niche?: string;
   location?: string;
   star_level?: StarLevel;
+  /** Optional Amazon Storefront URL. If set, replaces the mycard.to URL on the public kit. */
+  amazon_storefront?: string;
 };
 
 const STAR_LEVELS: StarLevel[] = ["bronze", "silver", "gold", "platinum"];
@@ -33,6 +35,9 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
   const [name, setName] = useState(card?.data.name ?? "");
   const [bio, setBio] = useState(card?.data.bio ?? "");
   const [location, setLocation] = useState(card?.data.location ?? "");
+  const [amazonStorefront, setAmazonStorefront] = useState(
+    card?.data.amazon_storefront ?? ""
+  );
   const [starLevel, setStarLevel] = useState<StarLevel | "">(
     card?.data.star_level ?? ""
   );
@@ -90,6 +95,14 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
     setSaveError(null);
     setSaveStatus("idle");
 
+    // Light normalization: if user typed a URL without a protocol, add https://
+    const cleanedStorefront = (() => {
+      const v = amazonStorefront.trim();
+      if (!v) return undefined;
+      if (/^https?:\/\//i.test(v)) return v;
+      return `https://${v}`;
+    })();
+
     const data: ProfileCardData = {
       // Preserve any existing niche on the card so a future "Niche" field can re-read it.
       ...(card?.data.niche ? { niche: card.data.niche } : {}),
@@ -98,6 +111,7 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
       bio: bio.trim() || undefined,
       location: location.trim() || undefined,
       star_level: starLevel || undefined,
+      amazon_storefront: cleanedStorefront,
     };
 
     startSave(async () => {
@@ -218,6 +232,20 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Los Angeles, CA"
               maxLength={60}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+          </Field>
+
+          <Field
+            label="Amazon Storefront link"
+            hint="If set, this replaces the mycard.to URL on your public kit and links straight to your storefront."
+          >
+            <input
+              type="url"
+              value={amazonStorefront}
+              onChange={(e) => setAmazonStorefront(e.target.value)}
+              placeholder="https://www.amazon.com/shop/yourhandle"
+              maxLength={200}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
           </Field>
