@@ -50,7 +50,7 @@ export default async function PublicKitPage({
 
   return (
     <main className="flex-1 bg-gradient-to-b from-pink-50 to-white">
-      <div className="mx-auto max-w-5xl px-6 py-16">
+      <div className="mx-auto max-w-7xl px-6 py-16">
         <ProfileCard
           username={profile.username}
           data={(profileCard?.data ?? {}) as ProfileCardData}
