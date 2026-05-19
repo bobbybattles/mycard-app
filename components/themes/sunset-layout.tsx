@@ -7,6 +7,7 @@ import type { ProfileLink } from "@/lib/links";
 import {
   PLATFORM_GROUPS,
   formatMetricValue,
+  getSectionMetrics,
   groupHasAnyMetric,
   hasAnyMetric,
   normalizeMetrics,
@@ -150,7 +151,7 @@ export default function SunsetLayout({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     {visibleSections.map((section) => {
-                      const sectionData = groupData[section.id] ?? {};
+                      const sectionData = getSectionMetrics(groupData, section.id) ?? {};
                       const filled = section.metrics.filter(
                         (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
                       );

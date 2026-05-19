@@ -7,6 +7,7 @@ import type { ProfileLink } from "@/lib/links";
 import {
   PLATFORM_GROUPS,
   formatMetricValue,
+  getSectionMetrics,
   groupHasAnyMetric,
   hasAnyMetric,
   normalizeMetrics,
@@ -146,7 +147,7 @@ export default function MagazineLayout({
                     {group.sections
                       .filter((s) => sectionHasAnyMetric(groupData, s.id, s))
                       .map((section) => {
-                        const sectionData = groupData[section.id] ?? {};
+                        const sectionData = getSectionMetrics(groupData, section.id) ?? {};
                         const filled = section.metrics.filter(
                           (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
                         );

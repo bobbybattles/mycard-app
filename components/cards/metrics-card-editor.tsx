@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   PLATFORM_GROUPS,
   TIMEFRAME_OPTIONS,
+  getSectionMetrics,
   normalizeMetrics,
   type MetricsCardData,
   type PlatformGroupConfig,
@@ -38,7 +39,7 @@ function initGroupValues(
   const sections: Record<string, Record<string, string>> = {};
   for (const section of group.sections) {
     sections[section.id] = {};
-    const saved = groupData?.[section.id];
+    const saved = getSectionMetrics(groupData, section.id);
     for (const metric of section.metrics) {
       sections[section.id][metric.key] = saved?.[metric.key] ?? "";
     }
@@ -64,7 +65,7 @@ function cleanedGroupData(values: GroupValues, group: PlatformGroupConfig): Plat
       if (v) cleaned[metric.key] = v;
     }
     if (Object.keys(cleaned).length > 0) {
-      out[section.id] = cleaned;
+      (out as Record<string, unknown>)[section.id] = cleaned;
     }
   }
   return out;

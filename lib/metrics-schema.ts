@@ -113,9 +113,26 @@ export const PLATFORM_GROUPS: PlatformGroupConfig[] = [
 ];
 
 // Per-platform data: timeframe + each section's metrics keyed by sectionId.
+// Section keys are spelled out explicitly so TypeScript doesn't fight with
+// the `timeframe: string | undefined` field against an index signature.
 export type PlatformGroupData = {
   timeframe?: string;
-} & Partial<Record<string, Record<MetricKey, string>>>;
+  offsite?: Record<MetricKey, string>;
+  onsite?: Record<MetricKey, string>;
+  creator_connections?: Record<MetricKey, string>;
+  shop?: Record<MetricKey, string>;
+};
+
+/** Read a section's metrics by sectionId (handles the dynamic key lookup). */
+export function getSectionMetrics(
+  groupData: PlatformGroupData | undefined,
+  sectionId: string
+): Record<MetricKey, string> | undefined {
+  if (!groupData) return undefined;
+  const v = (groupData as Record<string, unknown>)[sectionId];
+  if (v && typeof v === "object") return v as Record<MetricKey, string>;
+  return undefined;
+}
 
 // Persisted shape on cards.data for card_type = "metrics".
 export type MetricsCardData = {
@@ -190,7 +207,7 @@ export function sectionHasAnyMetric(
   section: MetricSection
 ): boolean {
   if (!groupData) return false;
-  const sectionData = groupData[sectionId];
+  const sectionData = getSectionMetrics(groupData, sectionId);
   if (!sectionData) return false;
   return section.metrics.some(
     (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0

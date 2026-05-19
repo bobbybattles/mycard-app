@@ -1,6 +1,7 @@
 import {
   PLATFORM_GROUPS,
   formatMetricValue,
+  getSectionMetrics,
   groupHasAnyMetric,
   normalizeMetrics,
   sectionHasAnyMetric,
@@ -61,7 +62,7 @@ function PlatformGroupBlock({
 
       <div className="flex flex-wrap justify-center gap-5">
         {visibleSections.map((section) => {
-          const sectionData = groupData[section.id] ?? {};
+          const sectionData = getSectionMetrics(groupData, section.id) ?? {};
           const filled = section.metrics.filter(
             (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
           );
