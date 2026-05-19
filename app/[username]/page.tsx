@@ -8,6 +8,7 @@ import { hasAnyMetric, type MetricsCardData } from "@/lib/metrics-schema";
 import PortfolioCard from "@/components/cards/portfolio-card";
 import type { PortfolioCardData } from "@/components/cards/portfolio-card-editor";
 import PlatformLinks from "@/components/cards/platform-links";
+import type { LinksCardData, ProfileLink } from "@/lib/links";
 
 // Public kit page rendered at mycard.to/<username>.
 // Server-rendered for speed + SEO. RLS keeps unpublished kits 404 to outsiders.
@@ -47,12 +48,35 @@ export default async function PublicKitPage({
   const profileCard = cards?.find((c) => c.card_type === "profile");
   const metricsCard = cards?.find((c) => c.card_type === "metrics");
   const portfolioCard = cards?.find((c) => c.card_type === "portfolio");
-  const knownTypes = new Set(["profile", "metrics", "portfolio"]);
+  const linksCard = cards?.find((c) => c.card_type === "links");
+  const knownTypes = new Set(["profile", "metrics", "portfolio", "links"]);
   const unknownCards = (cards ?? []).filter((c) => !knownTypes.has(c.card_type));
 
   const profileData = (profileCard?.data ?? {}) as ProfileCardData;
   const metricsData = (metricsCard?.data ?? {}) as MetricsCardData;
   const portfolioData = (portfolioCard?.data ?? { groups: [] }) as PortfolioCardData;
+  const linksData = (linksCard?.data ?? { links: [] }) as LinksCardData;
+
+  // Resolve which link list to render: prefer the unified Links card; fall
+  // back to the legacy fields on the profile card so existing kits keep
+  // working until the user re-saves.
+  const resolvedLinks: ProfileLink[] =
+    linksData.links && linksData.links.length > 0
+      ? linksData.links
+      : [
+          ...(profileData.platform_links ?? []).map((l) => ({
+            id: l.id,
+            type: l.platform,
+            label: l.label,
+            url: l.url,
+          })),
+          ...(profileData.social_profiles ?? []).map((s) => ({
+            id: s.id,
+            type: s.type,
+            label: s.label,
+            url: s.url,
+          })),
+        ];
 
   return (
     <main className="flex-1 bg-gradient-to-b from-pink-50 to-white">
@@ -75,13 +99,9 @@ export default async function PublicKitPage({
           </div>
         )}
 
-        {((profileData.platform_links && profileData.platform_links.length > 0) ||
-          (profileData.social_profiles && profileData.social_profiles.length > 0)) && (
+        {resolvedLinks.length > 0 && (
           <div className="mt-14">
-            <PlatformLinks
-              links={profileData.platform_links ?? []}
-              socials={profileData.social_profiles}
-            />
+            <PlatformLinks links={resolvedLinks} />
           </div>
         )}
 

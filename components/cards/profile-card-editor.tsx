@@ -4,23 +4,21 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import StarEmblem, { type StarLevel, LEVEL_LABELS } from "./star-emblem";
-import { PLATFORMS, PLATFORM_ORDER, type Platform } from "@/lib/platforms";
-import PlatformIcon from "./platform-icon";
-import { SOCIALS, SOCIAL_ORDER, type SocialType } from "@/lib/socials";
-import SocialIcon from "./social-icon";
+import type { Platform } from "@/lib/platforms";
+import type { SocialType } from "@/lib/socials";
 
+/** Legacy: kept readable for migration into the unified Links card. */
 export type ProfilePlatformLink = {
   id: string;
   platform: Platform;
-  /** Optional label (e.g. "Main channel", "Cooking account"). */
   label?: string;
   url: string;
 };
 
+/** Legacy: kept readable for migration into the unified Links card. */
 export type ProfileSocialLink = {
   id: string;
   type: SocialType;
-  /** Optional label (e.g. "Personal blog"). */
   label?: string;
   url: string;
 };
@@ -35,22 +33,17 @@ export type ProfileCardData = {
   star_level?: StarLevel;
   /** Optional Amazon Storefront URL. If set, replaces the mycard.to URL on the public kit. */
   amazon_storefront?: string;
-  /** Additional platform links (YouTube channels, TikTok, etc.) shown in a "Find me" footer. */
+  /** Legacy: read-only after this commit. New links live on the "links" card. */
   platform_links?: ProfilePlatformLink[];
-  /** Other social profile links (X, LinkedIn, Pinterest, website, etc.). */
+  /** Legacy: read-only after this commit. New socials live on the "links" card. */
   social_profiles?: ProfileSocialLink[];
 };
 
 const STAR_LEVELS: StarLevel[] = ["bronze", "silver", "gold", "platinum"];
 
-function randomId() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
 type Props = {
   userId: string;
   kitId: string;
-  // Existing profile card row, if any.
   card: { id: string; data: ProfileCardData; is_visible: boolean } | null;
 };
 
@@ -58,6 +51,7 @@ const MAX_PHOTO_MB = 5;
 
 // Editor for the user's Profile card.
 // Saves to the cards table (upserts on card_type = "profile" for this kit).
+// Platform + social links moved to the separate "Links" card.
 export default function ProfileCardEditor({ userId, kitId, card }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const [name, setName] = useState(card?.data.name ?? "");
@@ -69,94 +63,6 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
   const [starLevel, setStarLevel] = useState<StarLevel | "">(
     card?.data.star_level ?? ""
   );
-  const [platformLinks, setPlatformLinks] = useState<ProfilePlatformLink[]>(
-    () =>
-      (card?.data.platform_links ?? []).map((l) => ({
-        id: l.id || randomId(),
-        platform: l.platform,
-        label: l.label,
-        url: l.url,
-      }))
-  );
-  const [showPlatformPicker, setShowPlatformPicker] = useState(false);
-
-  const [socialProfiles, setSocialProfiles] = useState<ProfileSocialLink[]>(
-    () =>
-      (card?.data.social_profiles ?? []).map((s) => ({
-        id: s.id || randomId(),
-        type: s.type,
-        label: s.label,
-        url: s.url,
-      }))
-  );
-  const [showSocialPicker, setShowSocialPicker] = useState(false);
-
-  // Hide platform options that are already added so users don't pick duplicates.
-  const usedPlatforms = new Set(platformLinks.map((l) => l.platform));
-  const availablePlatforms = PLATFORM_ORDER.filter((p) => !usedPlatforms.has(p));
-
-  const usedSocials = new Set(socialProfiles.map((s) => s.type));
-  const availableSocials = SOCIAL_ORDER.filter((s) => !usedSocials.has(s));
-
-  function addSocialProfile(type: SocialType) {
-    setSocialProfiles((prev) => [
-      ...prev,
-      { id: randomId(), type, label: "", url: "" },
-    ]);
-    setShowSocialPicker(false);
-  }
-
-  function updateSocialProfile(id: string, patch: Partial<ProfileSocialLink>) {
-    setSocialProfiles((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...patch } : s))
-    );
-  }
-
-  function removeSocialProfile(id: string) {
-    setSocialProfiles((prev) => prev.filter((s) => s.id !== id));
-  }
-
-  function moveSocialProfile(id: string, direction: "up" | "down") {
-    setSocialProfiles((prev) => {
-      const idx = prev.findIndex((s) => s.id === id);
-      if (idx === -1) return prev;
-      const swap = direction === "up" ? idx - 1 : idx + 1;
-      if (swap < 0 || swap >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[swap]] = [next[swap], next[idx]];
-      return next;
-    });
-  }
-
-  function addPlatformLink(platform: Platform) {
-    setPlatformLinks((prev) => [
-      ...prev,
-      { id: randomId(), platform, label: "", url: "" },
-    ]);
-    setShowPlatformPicker(false);
-  }
-
-  function updatePlatformLink(id: string, patch: Partial<ProfilePlatformLink>) {
-    setPlatformLinks((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, ...patch } : l))
-    );
-  }
-
-  function removePlatformLink(id: string) {
-    setPlatformLinks((prev) => prev.filter((l) => l.id !== id));
-  }
-
-  function movePlatformLink(id: string, direction: "up" | "down") {
-    setPlatformLinks((prev) => {
-      const idx = prev.findIndex((l) => l.id === id);
-      if (idx === -1) return prev;
-      const swap = direction === "up" ? idx - 1 : idx + 1;
-      if (swap < 0 || swap >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[swap]] = [next[swap], next[idx]];
-      return next;
-    });
-  }
   const [photoUrl, setPhotoUrl] = useState(card?.data.photo_url ?? "");
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -187,8 +93,6 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
 
     setPhotoUploading(true);
     try {
-      // Store under <userId>/profile.<ext> so RLS lets the owner write and
-      // public read works through the kit-media bucket's policies.
       const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
       const path = `${userId}/profile.${ext}`;
       const { error: uploadErr } = await supabase.storage
@@ -199,7 +103,6 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
         return;
       }
       const { data: pub } = supabase.storage.from("kit-media").getPublicUrl(path);
-      // Cache-bust so the new image shows immediately after upload.
       setPhotoUrl(`${pub.publicUrl}?v=${Date.now()}`);
     } finally {
       setPhotoUploading(false);
@@ -219,48 +122,21 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
       return `https://${v}`;
     })();
 
-    const cleanedPlatformLinks = platformLinks
-      .map((l) => {
-        const url = l.url.trim();
-        const withProtocol =
-          !url || /^https?:\/\//i.test(url) ? url : `https://${url}`;
-        return {
-          id: l.id,
-          platform: l.platform,
-          label: l.label?.trim() || undefined,
-          url: withProtocol,
-        };
-      })
-      .filter((l) => l.url.length > 0);
-
     const data: ProfileCardData = {
-      // Preserve any existing niche on the card so a future "Niche" field can re-read it.
+      // Preserve legacy fields so they're still readable for the Links card migration.
       ...(card?.data.niche ? { niche: card.data.niche } : {}),
+      ...(card?.data.platform_links
+        ? { platform_links: card.data.platform_links }
+        : {}),
+      ...(card?.data.social_profiles
+        ? { social_profiles: card.data.social_profiles }
+        : {}),
       photo_url: photoUrl || undefined,
       name: name.trim() || undefined,
       bio: bio.trim() || undefined,
       location: location.trim() || undefined,
       star_level: starLevel || undefined,
       amazon_storefront: cleanedStorefront,
-      platform_links:
-        cleanedPlatformLinks.length > 0 ? cleanedPlatformLinks : undefined,
-      social_profiles:
-        (() => {
-          const cleaned = socialProfiles
-            .map((s) => {
-              const url = s.url.trim();
-              const withProtocol =
-                !url || /^https?:\/\//i.test(url) ? url : `https://${url}`;
-              return {
-                id: s.id,
-                type: s.type,
-                label: s.label?.trim() || undefined,
-                url: withProtocol,
-              };
-            })
-            .filter((s) => s.url.length > 0);
-          return cleaned.length > 0 ? cleaned : undefined;
-        })(),
     };
 
     startSave(async () => {
@@ -424,261 +300,6 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
               ))}
             </div>
           </Field>
-        </div>
-      </div>
-
-      {/* Platforms section — separate "Find me" links rendered as a footer on the public kit. */}
-      <div className="mt-8 border-t border-slate-100 pt-6">
-        <h3 className="font-semibold text-slate-900">Platforms</h3>
-        <p className="text-sm text-slate-600 mt-0.5">
-          Where brands can find you. Shown as a row of icons at the bottom of
-          your kit, plus used to hyperlink each portfolio section. Add as many
-          as you want — multiple per platform is fine (e.g. two YouTube
-          channels).
-        </p>
-
-        <div className="mt-4 space-y-2">
-          {platformLinks.map((link, idx) => {
-            const cfg = PLATFORMS[link.platform];
-            const isFirst = idx === 0;
-            const isLast = idx === platformLinks.length - 1;
-            return (
-              <div
-                key={link.id}
-                className="grid grid-cols-[40px_1fr_auto] gap-3 items-center rounded-lg border border-slate-200 p-3"
-              >
-                <PlatformIcon platform={link.platform} size={36} />
-                <div className="space-y-2 min-w-0">
-                  <input
-                    type="url"
-                    value={link.url}
-                    onChange={(e) =>
-                      updatePlatformLink(link.id, { url: e.target.value })
-                    }
-                    placeholder={`${cfg.label} URL`}
-                    maxLength={300}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  />
-                  <input
-                    type="text"
-                    value={link.label ?? ""}
-                    onChange={(e) =>
-                      updatePlatformLink(link.id, { label: e.target.value })
-                    }
-                    placeholder='Optional label (e.g. "Main channel")'
-                    maxLength={50}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  />
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => movePlatformLink(link.id, "up")}
-                    disabled={isFirst}
-                    className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
-                    aria-label="Move up"
-                    title="Move up"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden>
-                      <path d="M12 4l-8 8h5v8h6v-8h5z" fill="currentColor" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => movePlatformLink(link.id, "down")}
-                    disabled={isLast}
-                    className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
-                    aria-label="Move down"
-                    title="Move down"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden>
-                      <path d="M12 20l8-8h-5V4H9v8H4z" fill="currentColor" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removePlatformLink(link.id)}
-                    className="text-xs text-slate-400 hover:text-red-600 px-1"
-                    aria-label="Remove platform link"
-                    title="Remove"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-3">
-          {availablePlatforms.length === 0 ? (
-            <p className="text-xs text-slate-500 italic px-1">
-              All platforms added. Remove one above to add another.
-            </p>
-          ) : showPlatformPicker ? (
-            <div className="rounded-lg border border-dashed border-slate-300 p-3">
-              <p className="text-xs text-slate-600 mb-2 font-medium">
-                Pick a platform
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {availablePlatforms.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => addPlatformLink(p)}
-                    className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-left hover:border-pink-300 hover:bg-pink-50 transition"
-                  >
-                    <PlatformIcon platform={p} size={28} />
-                    <span className="text-sm font-medium text-slate-900">
-                      {PLATFORMS[p].label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowPlatformPicker(false)}
-                className="mt-3 text-xs text-slate-500 hover:text-slate-700"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowPlatformPicker(true)}
-              className="w-full rounded-lg border-2 border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-600 hover:border-pink-400 hover:text-pink-700 hover:bg-pink-50 transition"
-            >
-              + Add platform link
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Social profiles — different from Platforms: general find-me links
-          like X, LinkedIn, Pinterest, Threads, Snapchat, Website. */}
-      <div className="mt-8 border-t border-slate-100 pt-6">
-        <h3 className="font-semibold text-slate-900">Social profiles</h3>
-        <p className="text-sm text-slate-600 mt-0.5">
-          Where else brands can find you. Shown alongside your platform links on
-          the public kit.
-        </p>
-
-        <div className="mt-4 space-y-2">
-          {socialProfiles.map((social, idx) => {
-            const cfg = SOCIALS[social.type];
-            const isFirst = idx === 0;
-            const isLast = idx === socialProfiles.length - 1;
-            return (
-              <div
-                key={social.id}
-                className="grid grid-cols-[40px_1fr_auto] gap-3 items-center rounded-lg border border-slate-200 p-3"
-              >
-                <SocialIcon type={social.type} size={36} />
-                <div className="space-y-2 min-w-0">
-                  <input
-                    type="url"
-                    value={social.url}
-                    onChange={(e) =>
-                      updateSocialProfile(social.id, { url: e.target.value })
-                    }
-                    placeholder={cfg.urlHint}
-                    maxLength={300}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  />
-                  <input
-                    type="text"
-                    value={social.label ?? ""}
-                    onChange={(e) =>
-                      updateSocialProfile(social.id, { label: e.target.value })
-                    }
-                    placeholder='Optional label (e.g. "Personal blog")'
-                    maxLength={50}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  />
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => moveSocialProfile(social.id, "up")}
-                    disabled={isFirst}
-                    className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
-                    aria-label="Move up"
-                    title="Move up"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden>
-                      <path d="M12 4l-8 8h5v8h6v-8h5z" fill="currentColor" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveSocialProfile(social.id, "down")}
-                    disabled={isLast}
-                    className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
-                    aria-label="Move down"
-                    title="Move down"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden>
-                      <path d="M12 20l8-8h-5V4H9v8H4z" fill="currentColor" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeSocialProfile(social.id)}
-                    className="text-xs text-slate-400 hover:text-red-600 px-1"
-                    aria-label="Remove social"
-                    title="Remove"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-3">
-          {availableSocials.length === 0 ? (
-            <p className="text-xs text-slate-500 italic px-1">
-              All social options added. Remove one above to add another.
-            </p>
-          ) : showSocialPicker ? (
-            <div className="rounded-lg border border-dashed border-slate-300 p-3">
-              <p className="text-xs text-slate-600 mb-2 font-medium">
-                Pick a social profile
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {availableSocials.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => addSocialProfile(s)}
-                    className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-left hover:border-pink-300 hover:bg-pink-50 transition"
-                  >
-                    <SocialIcon type={s} size={28} />
-                    <span className="text-sm font-medium text-slate-900">
-                      {SOCIALS[s].label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowSocialPicker(false)}
-                className="mt-3 text-xs text-slate-500 hover:text-slate-700"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowSocialPicker(true)}
-              className="w-full rounded-lg border-2 border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-600 hover:border-pink-400 hover:text-pink-700 hover:bg-pink-50 transition"
-            >
-              + Add social profile
-            </button>
-          )}
         </div>
       </div>
 

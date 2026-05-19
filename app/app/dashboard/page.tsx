@@ -9,6 +9,8 @@ import type { MetricsCardData } from "@/lib/metrics-schema";
 import PortfolioCardEditor, {
   type PortfolioCardData,
 } from "@/components/cards/portfolio-card-editor";
+import ConnectionsCardEditor from "@/components/cards/connections-card-editor";
+import type { LinksCardData, ProfileLink } from "@/lib/links";
 
 // Always re-fetch on every request so a save followed by a refresh shows the
 // freshly persisted data, not a stale cached render.
@@ -54,30 +56,56 @@ export default async function DashboardPage() {
   }
 
   // Load all editable cards in parallel.
-  const [profileCardRes, metricsCardRes, portfolioCardRes] = await Promise.all([
-    supabase
-      .from("cards")
-      .select("id, data, is_visible")
-      .eq("kit_id", kit.id)
-      .eq("card_type", "profile")
-      .maybeSingle(),
-    supabase
-      .from("cards")
-      .select("id, data, is_visible")
-      .eq("kit_id", kit.id)
-      .eq("card_type", "metrics")
-      .maybeSingle(),
-    supabase
-      .from("cards")
-      .select("id, data, is_visible")
-      .eq("kit_id", kit.id)
-      .eq("card_type", "portfolio")
-      .maybeSingle(),
-  ]);
+  const [profileCardRes, metricsCardRes, portfolioCardRes, linksCardRes] =
+    await Promise.all([
+      supabase
+        .from("cards")
+        .select("id, data, is_visible")
+        .eq("kit_id", kit.id)
+        .eq("card_type", "profile")
+        .maybeSingle(),
+      supabase
+        .from("cards")
+        .select("id, data, is_visible")
+        .eq("kit_id", kit.id)
+        .eq("card_type", "metrics")
+        .maybeSingle(),
+      supabase
+        .from("cards")
+        .select("id, data, is_visible")
+        .eq("kit_id", kit.id)
+        .eq("card_type", "portfolio")
+        .maybeSingle(),
+      supabase
+        .from("cards")
+        .select("id, data, is_visible")
+        .eq("kit_id", kit.id)
+        .eq("card_type", "links")
+        .maybeSingle(),
+    ]);
 
   const profileCard = profileCardRes.data;
   const metricsCard = metricsCardRes.data;
   const portfolioCard = portfolioCardRes.data;
+  const linksCard = linksCardRes.data;
+
+  // Migrate legacy data: if no links card yet, seed from the profile card's
+  // old platform_links + social_profiles fields.
+  const profileData = (profileCard?.data ?? {}) as ProfileCardData;
+  const legacyLinks: ProfileLink[] = [
+    ...(profileData.platform_links ?? []).map((l) => ({
+      id: l.id,
+      type: l.platform,
+      label: l.label,
+      url: l.url,
+    })),
+    ...(profileData.social_profiles ?? []).map((s) => ({
+      id: s.id,
+      type: s.type,
+      label: s.label,
+      url: s.url,
+    })),
+  ];
 
   return (
     <main className="flex-1 px-6 py-10 bg-slate-50">
@@ -103,7 +131,7 @@ export default async function DashboardPage() {
             profileCard
               ? {
                   id: profileCard.id,
-                  data: (profileCard.data ?? {}) as ProfileCardData,
+                  data: profileData,
                   is_visible: profileCard.is_visible,
                 }
               : null
@@ -136,11 +164,19 @@ export default async function DashboardPage() {
           }
         />
 
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
-          <p className="text-slate-500 text-sm">
-            More cards coming next: socials, brand collabs, rate card, and contact.
-          </p>
-        </div>
+        <ConnectionsCardEditor
+          kitId={kit.id}
+          card={
+            linksCard
+              ? {
+                  id: linksCard.id,
+                  data: (linksCard.data ?? { links: [] }) as LinksCardData,
+                  is_visible: linksCard.is_visible,
+                }
+              : null
+          }
+          legacySeed={legacyLinks}
+        />
 
         <div className="text-center">
           <Link
