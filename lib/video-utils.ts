@@ -1,8 +1,8 @@
-// Helpers for parsing portfolio video URLs (YouTube + Amazon Storefront).
+// Helpers for parsing portfolio video URLs.
 //
 // YouTube exposes a public oEmbed endpoint with CORS enabled, so we can fetch
 // titles from the browser without an API key. Amazon does not — so for Amazon
-// URLs we rely on the user typing the title themselves.
+// URLs we rely on a server-side scrape (/api/video-meta).
 
 export type VideoSource = "youtube" | "amazon" | "other";
 
@@ -13,7 +13,6 @@ const YT_RE =
 export function detectVideoSource(url: string): VideoSource {
   if (!url) return "other";
   if (YT_RE.test(url)) return "youtube";
-  // amazon.com/shop/<handle>/...  or amazon.com/dp/<asin>/...  or amzn.to/...
   if (/(?:^|\/\/)([a-z0-9-]+\.)?amazon\./i.test(url) || /amzn\.to\//i.test(url)) {
     return "amazon";
   }

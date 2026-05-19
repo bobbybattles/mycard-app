@@ -4,6 +4,16 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import StarEmblem, { type StarLevel, LEVEL_LABELS } from "./star-emblem";
+import { PLATFORMS, PLATFORM_ORDER, type Platform } from "@/lib/platforms";
+import PlatformIcon from "./platform-icon";
+
+export type ProfilePlatformLink = {
+  id: string;
+  platform: Platform;
+  /** Optional label (e.g. "Main channel", "Cooking account"). */
+  label?: string;
+  url: string;
+};
 
 // Shape stored in cards.data for card_type = "profile".
 export type ProfileCardData = {
@@ -15,9 +25,15 @@ export type ProfileCardData = {
   star_level?: StarLevel;
   /** Optional Amazon Storefront URL. If set, replaces the mycard.to URL on the public kit. */
   amazon_storefront?: string;
+  /** Additional platform links (YouTube channels, TikTok, etc.) shown in a "Find me" footer. */
+  platform_links?: ProfilePlatformLink[];
 };
 
 const STAR_LEVELS: StarLevel[] = ["bronze", "silver", "gold", "platinum"];
+
+function randomId() {
+  return Math.random().toString(36).slice(2, 10);
+}
 
 type Props = {
   userId: string;
@@ -41,6 +57,34 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
   const [starLevel, setStarLevel] = useState<StarLevel | "">(
     card?.data.star_level ?? ""
   );
+  const [platformLinks, setPlatformLinks] = useState<ProfilePlatformLink[]>(
+    () =>
+      (card?.data.platform_links ?? []).map((l) => ({
+        id: l.id || randomId(),
+        platform: l.platform,
+        label: l.label,
+        url: l.url,
+      }))
+  );
+  const [showPlatformPicker, setShowPlatformPicker] = useState(false);
+
+  function addPlatformLink(platform: Platform) {
+    setPlatformLinks((prev) => [
+      ...prev,
+      { id: randomId(), platform, label: "", url: "" },
+    ]);
+    setShowPlatformPicker(false);
+  }
+
+  function updatePlatformLink(id: string, patch: Partial<ProfilePlatformLink>) {
+    setPlatformLinks((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, ...patch } : l))
+    );
+  }
+
+  function removePlatformLink(id: string) {
+    setPlatformLinks((prev) => prev.filter((l) => l.id !== id));
+  }
   const [photoUrl, setPhotoUrl] = useState(card?.data.photo_url ?? "");
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -103,6 +147,20 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
       return `https://${v}`;
     })();
 
+    const cleanedPlatformLinks = platformLinks
+      .map((l) => {
+        const url = l.url.trim();
+        const withProtocol =
+          !url || /^https?:\/\//i.test(url) ? url : `https://${url}`;
+        return {
+          id: l.id,
+          platform: l.platform,
+          label: l.label?.trim() || undefined,
+          url: withProtocol,
+        };
+      })
+      .filter((l) => l.url.length > 0);
+
     const data: ProfileCardData = {
       // Preserve any existing niche on the card so a future "Niche" field can re-read it.
       ...(card?.data.niche ? { niche: card.data.niche } : {}),
@@ -112,6 +170,8 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
       location: location.trim() || undefined,
       star_level: starLevel || undefined,
       amazon_storefront: cleanedStorefront,
+      platform_links:
+        cleanedPlatformLinks.length > 0 ? cleanedPlatformLinks : undefined,
     };
 
     startSave(async () => {
@@ -275,6 +335,101 @@ export default function ProfileCardEditor({ userId, kitId, card }: Props) {
               ))}
             </div>
           </Field>
+        </div>
+      </div>
+
+      {/* Platforms section — separate "Find me" links rendered as a footer on the public kit. */}
+      <div className="mt-8 border-t border-slate-100 pt-6">
+        <h3 className="font-semibold text-slate-900">Platforms</h3>
+        <p className="text-sm text-slate-600 mt-0.5">
+          Where brands can find you. Shown as a row of icons at the bottom of
+          your kit, plus used to hyperlink each portfolio section. Add as many
+          as you want — multiple per platform is fine (e.g. two YouTube
+          channels).
+        </p>
+
+        <div className="mt-4 space-y-2">
+          {platformLinks.map((link) => {
+            const cfg = PLATFORMS[link.platform];
+            return (
+              <div
+                key={link.id}
+                className="grid grid-cols-[40px_1fr_auto] gap-3 items-center rounded-lg border border-slate-200 p-3"
+              >
+                <PlatformIcon platform={link.platform} size={36} />
+                <div className="space-y-2 min-w-0">
+                  <input
+                    type="url"
+                    value={link.url}
+                    onChange={(e) =>
+                      updatePlatformLink(link.id, { url: e.target.value })
+                    }
+                    placeholder={`${cfg.label} URL`}
+                    maxLength={300}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                  <input
+                    type="text"
+                    value={link.label ?? ""}
+                    onChange={(e) =>
+                      updatePlatformLink(link.id, { label: e.target.value })
+                    }
+                    placeholder='Optional label (e.g. "Main channel")'
+                    maxLength={50}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removePlatformLink(link.id)}
+                  className="text-xs text-slate-400 hover:text-red-600 px-2 py-1 self-start"
+                  aria-label="Remove platform link"
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-3">
+          {showPlatformPicker ? (
+            <div className="rounded-lg border border-dashed border-slate-300 p-3">
+              <p className="text-xs text-slate-600 mb-2 font-medium">
+                Pick a platform
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {PLATFORM_ORDER.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => addPlatformLink(p)}
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-left hover:border-pink-300 hover:bg-pink-50 transition"
+                  >
+                    <PlatformIcon platform={p} size={28} />
+                    <span className="text-sm font-medium text-slate-900">
+                      {PLATFORMS[p].label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPlatformPicker(false)}
+                className="mt-3 text-xs text-slate-500 hover:text-slate-700"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowPlatformPicker(true)}
+              className="w-full rounded-lg border-2 border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-600 hover:border-pink-400 hover:text-pink-700 hover:bg-pink-50 transition"
+            >
+              + Add platform link
+            </button>
+          )}
         </div>
       </div>
 
