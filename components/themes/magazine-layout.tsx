@@ -134,11 +134,11 @@ export default function MagazineLayout({
       {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
       {hasAnyMetric(metricsData) && (
         <section className="border-b-4 border-slate-900 bg-slate-900 text-amber-50">
-          <div className="mx-auto max-w-6xl px-6 py-10">
-            <h2 className="font-serif text-3xl sm:text-4xl font-black tracking-tight mb-8">
+          <div className="mx-auto max-w-6xl px-6 py-8">
+            <h2 className="font-serif text-2xl sm:text-3xl font-black tracking-tight mb-5">
               The Numbers
             </h2>
-            <div className="flex flex-wrap gap-x-8 gap-y-10">
+            <div className="flex flex-wrap gap-x-6 gap-y-6">
             {PLATFORM_GROUPS.filter((g) =>
               groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
             ).map((group) => {
@@ -147,9 +147,9 @@ export default function MagazineLayout({
               return (
                 <div
                   key={group.id}
-                  className={`border-t-2 border-amber-200/30 pt-6 ${isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}`}
+                  className={`border-t-2 border-amber-200/30 pt-3 ${isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}`}
                 >
-                  <div className="flex items-baseline justify-between gap-4 mb-5">
+                  <div className="flex items-baseline justify-between gap-4 mb-3">
                     <p className="text-sm uppercase tracking-[0.3em] font-bold text-amber-200">
                       {group.label}
                     </p>
@@ -159,7 +159,7 @@ export default function MagazineLayout({
                       </p>
                     )}
                   </div>
-                  <div className="space-y-5">
+                  <div className="space-y-3">
                     {group.sections
                       .filter((s) => sectionHasAnyMetric(groupData, s.id, s))
                       .map((section) => {
@@ -169,16 +169,16 @@ export default function MagazineLayout({
                         );
                         return (
                           <div key={section.id}>
-                            <p className="text-[10px] uppercase tracking-[0.25em] text-amber-200/60 mb-2">
+                            <p className="text-[10px] uppercase tracking-[0.25em] text-amber-200/60 mb-1.5">
                               {section.title}
                             </p>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
                               {filled.map((metric) => (
                                 <div key={metric.key}>
                                   <p className="text-[10px] uppercase tracking-wider text-amber-200/70">
                                     {metric.label}
                                   </p>
-                                  <p className="font-serif text-3xl font-black tabular-nums mt-0.5">
+                                  <p className="font-serif text-2xl font-black tabular-nums mt-0.5">
                                     {formatMetricValue(sectionData[metric.key], metric.format)}
                                   </p>
                                 </div>

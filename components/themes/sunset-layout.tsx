@@ -133,11 +133,11 @@ export default function SunsetLayout({
 
         {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
         {hasAnyMetric(metricsData) && (
-          <section className="mt-12">
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-6">
+          <section className="mt-8">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-4">
               The Numbers
             </h2>
-            <div className="flex flex-wrap gap-x-6 gap-y-10">
+            <div className="flex flex-wrap gap-x-5 gap-y-6">
             {PLATFORM_GROUPS.filter((g) =>
               groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
             ).map((group) => {
@@ -151,17 +151,17 @@ export default function SunsetLayout({
                   key={group.id}
                   className={isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}
                 >
-                  <div className="flex items-baseline justify-between mb-5">
-                    <h3 className="text-2xl font-black tracking-tight text-orange-950">
+                  <div className="flex items-baseline justify-between mb-3">
+                    <h3 className="text-lg font-black tracking-tight text-orange-950">
                       {group.label}
                     </h3>
                     {groupData.timeframe && (
-                      <p className="text-sm font-bold text-orange-800">
+                      <p className="text-xs font-bold text-orange-800">
                         {groupData.timeframe}
                       </p>
                     )}
                   </div>
-                  <div className="flex flex-wrap justify-center gap-5">
+                  <div className="flex flex-wrap justify-center gap-4">
                     {visibleSections.map((section) => {
                       const sectionData = getSectionMetrics(groupData, section.id) ?? {};
                       const filled = section.metrics.filter(
@@ -170,12 +170,12 @@ export default function SunsetLayout({
                       return (
                         <div
                           key={section.id}
-                          className="basis-[280px] grow max-w-md rounded-3xl bg-orange-50/80 backdrop-blur p-5 shadow-xl"
+                          className="basis-[280px] grow max-w-md rounded-3xl bg-orange-50/80 backdrop-blur px-4 py-4 shadow-xl"
                         >
-                          <h4 className="text-sm font-black uppercase tracking-wider text-orange-900 pb-3 border-b border-orange-200">
+                          <h4 className="text-xs font-black uppercase tracking-wider text-orange-900 pb-2 border-b border-orange-200">
                             {section.title}
                           </h4>
-                          <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">
+                          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
                             {filled.map((metric) => (
                               <div key={metric.key}>
                                 <p className="text-[10px] uppercase tracking-wider text-orange-700 font-semibold">

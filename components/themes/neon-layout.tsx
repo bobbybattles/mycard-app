@@ -158,7 +158,7 @@ export default function NeonLayout({
 
         {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
         {hasAnyMetric(metricsData) && (
-          <section className="mt-12 flex flex-wrap gap-x-6 gap-y-10">
+          <section className="mt-6 flex flex-wrap gap-x-5 gap-y-6">
             {PLATFORM_GROUPS.filter((g) =>
               groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
             ).map((group) => {
@@ -172,15 +172,17 @@ export default function NeonLayout({
                   key={group.id}
                   className={isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}
                 >
-                  <header className="text-center mb-6">
-                    <p className="text-xs font-bold uppercase tracking-[0.4em] text-cyan-300">
+                  <header className="text-center mb-3">
+                    <span className="text-xs font-bold uppercase tracking-[0.4em] text-cyan-300">
                       {group.label}
-                    </p>
+                    </span>
                     {groupData.timeframe && (
-                      <p className="mt-1 text-sm text-slate-400">{groupData.timeframe}</p>
+                      <span className="ml-3 text-xs text-slate-400">
+                        · {groupData.timeframe}
+                      </span>
                     )}
                   </header>
-                  <div className="flex flex-wrap justify-center gap-5">
+                  <div className="flex flex-wrap justify-center gap-4">
                     {visibleSections.map((section) => {
                       const sectionData = getSectionMetrics(groupData, section.id) ?? {};
                       const filled = section.metrics.filter(
@@ -189,12 +191,12 @@ export default function NeonLayout({
                       return (
                         <div
                           key={section.id}
-                          className="basis-[280px] grow max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 shadow-2xl"
+                          className="basis-[280px] grow max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-4 shadow-2xl"
                         >
-                          <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-300 pb-3 border-b border-white/10">
+                          <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-300 pb-2 border-b border-white/10">
                             {section.title}
                           </h3>
-                          <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">
+                          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
                             {filled.map((metric) => (
                               <div key={metric.key} className="min-w-0">
                                 <p className="text-[10px] uppercase tracking-wider text-slate-400">

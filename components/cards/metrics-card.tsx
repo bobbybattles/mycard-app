@@ -24,7 +24,7 @@ export default function MetricsCard({ data }: Props) {
   if (visibleGroups.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-x-6 gap-y-10">
+    <div className="flex flex-wrap gap-x-5 gap-y-6">
       {visibleGroups.map((group) => {
         const isCompact = group.sections.length === 1;
         return (
@@ -54,18 +54,18 @@ function PlatformGroupBlock({
 
   return (
     <section>
-      <header className="text-center mb-6">
-        <p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-600">
+      <header className="text-center mb-3">
+        <span className="text-xs font-bold uppercase tracking-[0.25em] text-pink-600">
           {group.label}
-        </p>
+        </span>
         {groupData.timeframe && (
-          <p className="mt-1 text-sm font-semibold text-slate-700">
-            {groupData.timeframe}
-          </p>
+          <span className="ml-3 text-xs font-semibold text-slate-600">
+            · {groupData.timeframe}
+          </span>
         )}
       </header>
 
-      <div className="flex flex-wrap justify-center gap-5">
+      <div className="flex flex-wrap justify-center gap-4">
         {visibleSections.map((section) => {
           const sectionData = getSectionMetrics(groupData, section.id) ?? {};
           const filled = section.metrics.filter(
@@ -74,12 +74,12 @@ function PlatformGroupBlock({
           return (
             <div
               key={section.id}
-              className="basis-[280px] grow max-w-md rounded-xl border border-slate-200 bg-white px-6 py-5 shadow-sm"
+              className="basis-[280px] grow max-w-md rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
             >
-              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-900 pb-3 border-b border-slate-200">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-slate-900 pb-2 border-b border-slate-200">
                 {section.title}
               </h3>
-              <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-4">
+              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
                 {filled.map((metric) => (
                   <div key={metric.key} className="min-w-0">
                     <p className="text-[11px] text-slate-500 uppercase tracking-wide leading-tight">

@@ -122,8 +122,8 @@ export default function MinimalLayout({
       {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
       {hasAnyMetric(metricsData) && (
         <section className="border-t border-slate-200">
-          <div className="mx-auto max-w-5xl px-6 py-16">
-            <div className="flex flex-wrap gap-x-12 gap-y-16">
+          <div className="mx-auto max-w-5xl px-6 py-8">
+            <div className="flex flex-wrap gap-x-8 gap-y-8">
             {PLATFORM_GROUPS.filter((g) =>
               groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
             ).map((group) => {
@@ -134,17 +134,17 @@ export default function MinimalLayout({
                   key={group.id}
                   className={isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}
                 >
-                  <div className="text-center mb-12">
-                    <p className="text-[10px] uppercase tracking-[0.5em] text-slate-400">
+                  <div className="text-center mb-4">
+                    <span className="text-[10px] uppercase tracking-[0.5em] text-slate-400">
                       {group.label}
-                    </p>
+                    </span>
                     {groupData.timeframe && (
-                      <p className="mt-1 text-sm text-slate-600 font-light">
-                        {groupData.timeframe}
-                      </p>
+                      <span className="ml-3 text-xs text-slate-500 font-light">
+                        · {groupData.timeframe}
+                      </span>
                     )}
                   </div>
-                  <div className="space-y-12">
+                  <div className="space-y-5">
                     {group.sections
                       .filter((s) => sectionHasAnyMetric(groupData, s.id, s))
                       .map((section) => {
@@ -154,16 +154,16 @@ export default function MinimalLayout({
                         );
                         return (
                           <div key={section.id}>
-                            <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400 text-center mb-6">
+                            <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400 text-center mb-3">
                               {section.title}
                             </p>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-10 text-center">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5 text-center">
                               {filled.map((metric) => (
                                 <div key={metric.key}>
-                                  <p className="text-4xl sm:text-5xl font-extralight tabular-nums tracking-tight">
+                                  <p className="text-2xl sm:text-3xl font-extralight tabular-nums tracking-tight">
                                     {formatMetricValue(sectionData[metric.key], metric.format)}
                                   </p>
-                                  <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                                  <p className="mt-1 text-[10px] uppercase tracking-[0.3em] text-slate-500">
                                     {metric.label}
                                   </p>
                                 </div>
@@ -184,7 +184,7 @@ export default function MinimalLayout({
       {/* Find me — text links with subtle icons */}
       {resolvedLinks.length > 0 && (
         <section className="border-t border-slate-200">
-          <div className="mx-auto max-w-3xl px-6 py-14 text-center">
+          <div className="mx-auto max-w-3xl px-6 py-8 text-center">
             <p className="text-[10px] uppercase tracking-[0.5em] text-slate-400 mb-6">
               Elsewhere
             </p>
@@ -214,7 +214,7 @@ export default function MinimalLayout({
       {/* Portfolio — clean grid no chrome */}
       {portfolioData.groups && portfolioData.groups.length > 0 && (
         <section className="border-t border-slate-200">
-          <div className="mx-auto max-w-6xl px-6 py-16 space-y-14">
+          <div className="mx-auto max-w-6xl px-6 py-10 space-y-8">
             <p className="text-[10px] uppercase tracking-[0.5em] text-slate-400 text-center">
               Work
             </p>
