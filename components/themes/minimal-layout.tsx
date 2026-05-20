@@ -55,8 +55,15 @@ export default function MinimalLayout({
 
   return (
     <main className="flex-1 bg-white text-slate-900">
-      {/* Profile — compact horizontal card */}
+      {/* Profile + Find Me side-by-side */}
       <section className="mx-auto max-w-[1400px] px-6 pt-10 pb-8">
+        <div
+          className={
+            resolvedLinks.length > 0
+              ? "grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 items-stretch"
+              : ""
+          }
+        >
         <div className="flex flex-row items-stretch gap-4 sm:gap-6">
           <div className="relative w-24 sm:w-32 shrink-0 self-stretch rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center text-2xl font-light text-slate-600 min-h-[120px]">
             {profileData.photo_url ? (
@@ -137,6 +144,40 @@ export default function MinimalLayout({
             )}
           </div>
         </div>
+
+        {/* Find Me — side card next to profile */}
+        {resolvedLinks.length > 0 && (
+          <section className="border border-slate-200 rounded-xl px-5 py-5">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-slate-500 mb-3">
+              Find Me
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {resolvedLinks.map((link) => {
+                const cfg = getLinkTypeConfig(link.type);
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white pl-1.5 pr-3.5 py-1.5 hover:border-slate-400 transition"
+                  >
+                    <LinkIcon type={link.type} size={28} />
+                    <span className="flex flex-col items-start leading-tight">
+                      <span className="text-[9px] uppercase tracking-wider text-slate-500 font-light">
+                        {cfg.shortLabel}
+                      </span>
+                      <span className="text-xs font-light text-slate-900">
+                        {link.label || cfg.label}
+                      </span>
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          </section>
+        )}
+        </div>
       </section>
 
       {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
@@ -213,36 +254,6 @@ export default function MinimalLayout({
         </section>
         );
       })()}
-
-      {/* Find me — text links with subtle icons */}
-      {resolvedLinks.length > 0 && (
-        <section className="border-t border-slate-200">
-          <div className="mx-auto max-w-[1400px] px-6 py-8 text-center">
-            <p className="text-[10px] uppercase tracking-[0.5em] text-slate-400 mb-6">
-              Elsewhere
-            </p>
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-3">
-              {resolvedLinks.map((link) => {
-                const cfg = getLinkTypeConfig(link.type);
-                return (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-slate-700 hover:text-slate-900 transition"
-                  >
-                    <LinkIcon type={link.type} size={20} />
-                    <span className="underline underline-offset-4 decoration-slate-300 hover:decoration-slate-900">
-                      {link.label || cfg.shortLabel}
-                    </span>
-                  </a>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Rates — clean hairlines */}
       {hasAnyRate(ratesData) && (

@@ -55,12 +55,19 @@ export default function MagazineLayout({
 
   return (
     <main className="flex-1 bg-amber-50 font-sans text-slate-900">
-      {/* Hero — compact editorial card */}
+      {/* Hero — compact editorial card + Find Me side card */}
       <section className="border-b-4 border-slate-900">
         <div className="mx-auto max-w-[1400px] px-6 py-6">
           <p className="text-[10px] uppercase tracking-[0.4em] text-slate-600 font-semibold mb-3">
             Media Kit · No. 01
           </p>
+          <div
+            className={
+              resolvedLinks.length > 0
+                ? "grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 items-stretch"
+                : ""
+            }
+          >
           <div className="flex flex-row items-stretch gap-4 sm:gap-6">
             <div className="relative w-28 sm:w-36 shrink-0 self-stretch bg-slate-900 overflow-hidden min-h-[140px]">
               {profileData.photo_url ? (
@@ -145,6 +152,40 @@ export default function MagazineLayout({
               )}
             </div>
           </div>
+
+          {/* Find Me — editorial side card */}
+          {resolvedLinks.length > 0 && (
+            <section className="border-2 border-slate-900 bg-amber-50 px-5 py-5">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-700 font-bold mb-3">
+                Find Me
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {resolvedLinks.map((link) => {
+                  const cfg = getLinkTypeConfig(link.type);
+                  return (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-2 border border-slate-900 bg-amber-100 px-2 py-1.5 hover:bg-slate-900 hover:text-amber-100 transition"
+                    >
+                      <LinkIcon type={link.type} size={24} />
+                      <span className="flex flex-col items-start leading-tight min-w-0">
+                        <span className="text-[9px] font-bold uppercase tracking-wider truncate w-full">
+                          {cfg.shortLabel}
+                        </span>
+                        <span className="text-xs font-bold truncate w-full">
+                          {link.label || cfg.label}
+                        </span>
+                      </span>
+                    </a>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+          </div>
         </div>
       </section>
 
@@ -225,36 +266,6 @@ export default function MagazineLayout({
         </section>
         );
       })()}
-
-      {/* Find me — branded square tiles */}
-      {resolvedLinks.length > 0 && (
-        <section className="border-b-4 border-slate-900">
-          <div className="mx-auto max-w-[1400px] px-6 py-10">
-            <p className="text-xs uppercase tracking-[0.3em] font-bold mb-5 text-slate-700">
-              Find Me Elsewhere
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-              {resolvedLinks.map((link) => {
-                const cfg = getLinkTypeConfig(link.type);
-                return (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex flex-col items-center gap-2 border-2 border-slate-900 bg-amber-100 p-4 hover:bg-slate-900 hover:text-amber-100 transition"
-                  >
-                    <LinkIcon type={link.type} size={40} />
-                    <span className="text-xs font-bold uppercase tracking-wider text-center">
-                      {link.label || cfg.shortLabel}
-                    </span>
-                  </a>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Rates — editorial card */}
       {hasAnyRate(ratesData) && (

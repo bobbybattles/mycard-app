@@ -62,6 +62,14 @@ export default function SunsetLayout({
       }}
     >
       <div className="mx-auto max-w-[1400px] px-6 py-10">
+        {/* Profile + Find Me side-by-side */}
+        <div
+          className={
+            resolvedLinks.length > 0
+              ? "grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 items-stretch"
+              : ""
+          }
+        >
         {/* Profile — compact horizontal card */}
         <section className="rounded-3xl bg-white/60 backdrop-blur px-5 py-5 sm:px-7 sm:py-6 shadow-xl">
           <div className="flex flex-row items-stretch gap-4 sm:gap-6">
@@ -148,6 +156,40 @@ export default function SunsetLayout({
           </div>
         </section>
 
+        {/* Find Me — side card next to profile */}
+        {resolvedLinks.length > 0 && (
+          <section className="rounded-3xl bg-white/60 backdrop-blur px-5 py-5 sm:px-6 sm:py-5 shadow-xl">
+            <p className="text-xs font-black uppercase tracking-[0.4em] text-orange-800 mb-3">
+              Find Me
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {resolvedLinks.map((link) => {
+                const cfg = getLinkTypeConfig(link.type);
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur pl-1.5 pr-3.5 py-1.5 shadow-sm hover:shadow-md hover:bg-white transition"
+                  >
+                    <LinkIcon type={link.type} size={28} />
+                    <span className="flex flex-col items-start leading-tight">
+                      <span className="text-[9px] uppercase tracking-wider text-orange-700 font-bold">
+                        {cfg.shortLabel}
+                      </span>
+                      <span className="text-xs font-black text-orange-950">
+                        {link.label || cfg.label}
+                      </span>
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          </section>
+        )}
+        </div>
+
         {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
         {hasAnyMetric(metricsData) && (() => {
           const combineAmazon = !!metricsData.combine_amazon;
@@ -223,39 +265,6 @@ export default function SunsetLayout({
           </section>
           );
         })()}
-
-        {/* Find me — bold round pills */}
-        {resolvedLinks.length > 0 && (
-          <section className="mt-14">
-            <p className="text-xs font-black uppercase tracking-[0.4em] text-orange-800 mb-5">
-              Find Me
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {resolvedLinks.map((link) => {
-                const cfg = getLinkTypeConfig(link.type);
-                return (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-3 rounded-full bg-white/80 backdrop-blur pl-1.5 pr-5 py-1.5 shadow-md hover:shadow-xl hover:bg-white transition"
-                  >
-                    <LinkIcon type={link.type} size={32} />
-                    <span className="flex flex-col items-start leading-tight">
-                      <span className="text-[10px] uppercase tracking-wider text-orange-700 font-bold">
-                        {cfg.shortLabel}
-                      </span>
-                      <span className="text-sm font-black text-orange-950">
-                        {link.label || cfg.label}
-                      </span>
-                    </span>
-                  </a>
-                );
-              })}
-            </div>
-          </section>
-        )}
 
         {/* Rates — warm cream card */}
         {hasAnyRate(ratesData) && (

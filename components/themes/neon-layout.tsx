@@ -73,6 +73,14 @@ export default function NeonLayout({
       />
 
       <div className="relative mx-auto max-w-[1400px] px-6 py-10 z-10">
+        {/* Profile + Find Me side-by-side */}
+        <div
+          className={
+            resolvedLinks.length > 0
+              ? "grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 items-stretch"
+              : ""
+          }
+        >
         {/* Profile — compact horizontal card with glow ring around photo */}
         <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-5 py-5 sm:px-7 sm:py-6 shadow-2xl">
           <div className="flex flex-row items-stretch gap-4 sm:gap-6">
@@ -173,6 +181,40 @@ export default function NeonLayout({
           </div>
         </section>
 
+        {/* Find Me — side card next to profile */}
+        {resolvedLinks.length > 0 && (
+          <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-5 py-5 sm:px-6 sm:py-5 shadow-2xl">
+            <p className="text-xs font-black uppercase tracking-[0.4em] text-cyan-300 mb-3">
+              Find Me
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {resolvedLinks.map((link) => {
+                const cfg = getLinkTypeConfig(link.type);
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 backdrop-blur-xl pl-1.5 pr-3.5 py-1.5 hover:bg-white/10 hover:border-cyan-300/40 transition shadow-lg"
+                  >
+                    <LinkIcon type={link.type} size={28} />
+                    <span className="flex flex-col items-start leading-tight">
+                      <span className="text-[9px] uppercase tracking-wider text-cyan-300/80 font-bold">
+                        {cfg.shortLabel}
+                      </span>
+                      <span className="text-xs font-black text-slate-100">
+                        {link.label || cfg.label}
+                      </span>
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          </section>
+        )}
+        </div>
+
         {/* Performance — Sunset-style structure with neon colors */}
         {hasAnyMetric(metricsData) && (() => {
           const combineAmazon = !!metricsData.combine_amazon;
@@ -257,39 +299,6 @@ export default function NeonLayout({
           </section>
           );
         })()}
-
-        {/* Find me — glowing pills (Sunset-style left-aligned) */}
-        {resolvedLinks.length > 0 && (
-          <section className="mt-10">
-            <p className="text-xs font-black uppercase tracking-[0.4em] text-cyan-300 mb-4">
-              Find Me
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {resolvedLinks.map((link) => {
-                const cfg = getLinkTypeConfig(link.type);
-                return (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 backdrop-blur-xl pl-1.5 pr-5 py-1.5 hover:bg-white/10 hover:border-cyan-300/40 transition shadow-lg"
-                  >
-                    <LinkIcon type={link.type} size={32} />
-                    <span className="flex flex-col items-start leading-tight">
-                      <span className="text-[10px] uppercase tracking-wider text-cyan-300/80 font-bold">
-                        {cfg.shortLabel}
-                      </span>
-                      <span className="text-sm font-black text-slate-100">
-                        {link.label || cfg.label}
-                      </span>
-                    </span>
-                  </a>
-                );
-              })}
-            </div>
-          </section>
-        )}
 
         {/* Rates — glassmorphism card */}
         {hasAnyRate(ratesData) && (
