@@ -74,10 +74,10 @@ export default function OinkEmailForm({
           className={`shrink-0 text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-1 ${
             isPro
               ? "bg-pink-100 text-pink-800 border border-pink-200"
-              : "bg-slate-100 text-slate-600 border border-slate-200"
+              : "bg-amber-100 text-amber-800 border border-amber-200"
           }`}
         >
-          {isPro ? "Pro verified" : "Free"}
+          {isPro ? "Pro verified" : "Not a subscriber"}
         </span>
       </div>
 
