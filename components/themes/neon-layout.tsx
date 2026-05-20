@@ -72,7 +72,7 @@ export default function NeonLayout({
         style={{ background: "radial-gradient(circle, #8b5cf6 0%, transparent 70%)" }}
       />
 
-      <div className="relative mx-auto max-w-5xl px-6 py-10 z-10">
+      <div className="relative mx-auto max-w-[1400px] px-6 py-10 z-10">
         {/* Profile — compact horizontal card with glow ring around photo */}
         <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-5 py-5 sm:px-7 sm:py-6 shadow-2xl">
           <div className="flex flex-row items-stretch gap-4 sm:gap-6">
@@ -173,7 +173,7 @@ export default function NeonLayout({
           </div>
         </section>
 
-        {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
+        {/* Performance — Sunset-style structure with neon colors */}
         {hasAnyMetric(metricsData) && (() => {
           const combineAmazon = !!metricsData.combine_amazon;
           const norm = normalizeMetrics(metricsData);
@@ -183,7 +183,11 @@ export default function NeonLayout({
             return groupHasAnyMetric(norm[g.id], g);
           });
           return (
-          <section className="mt-6 flex flex-wrap gap-x-5 gap-y-6">
+          <section className="mt-8">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-4 text-cyan-100">
+              The Numbers
+            </h2>
+            <div className="flex flex-wrap gap-x-5 gap-y-6">
             {visibleGroups.map((group) => {
               const groupData = norm[group.id];
               const isAmazonCombined = group.id === "amazon" && combineAmazon;
@@ -198,16 +202,16 @@ export default function NeonLayout({
                   key={group.id}
                   className={isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}
                 >
-                  <header className="text-center mb-3">
-                    <span className="text-xs font-bold uppercase tracking-[0.4em] text-cyan-300">
+                  <div className="flex items-baseline justify-between mb-3">
+                    <h3 className="text-lg font-black tracking-tight text-cyan-200">
                       {group.label}
-                    </span>
+                    </h3>
                     {groupData.timeframe && (
-                      <span className="ml-3 text-xs text-slate-400">
-                        · {groupData.timeframe}
-                      </span>
+                      <p className="text-xs font-bold text-cyan-300/70">
+                        {groupData.timeframe}
+                      </p>
                     )}
-                  </header>
+                  </div>
                   <div className="flex flex-wrap justify-center gap-4">
                     {renderSections.map(({ section, data: sectionData }) => {
                       const filled = section.metrics.filter(
@@ -216,19 +220,19 @@ export default function NeonLayout({
                       return (
                         <div
                           key={section.id}
-                          className="basis-[280px] grow max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-4 shadow-2xl"
+                          className="basis-[280px] grow max-w-md rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-4 shadow-2xl"
                         >
-                          <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-300 pb-2 border-b border-white/10">
+                          <h4 className="text-xs font-black uppercase tracking-wider text-cyan-300 pb-2 border-b border-white/10">
                             {section.title}
-                          </h3>
+                          </h4>
                           <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
                             {filled.map((metric) => (
                               <div key={metric.key} className="min-w-0">
-                                <p className="text-[10px] uppercase tracking-wider text-slate-400">
+                                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
                                   {metric.label}
                                 </p>
                                 <p
-                                  className="mt-0.5 text-xl font-bold tabular-nums truncate"
+                                  className="mt-0.5 text-xl font-black tabular-nums truncate"
                                   style={{
                                     background:
                                       "linear-gradient(90deg, #f472b6, #c4b5fd)",
@@ -249,17 +253,18 @@ export default function NeonLayout({
                 </div>
               );
             })}
+            </div>
           </section>
           );
         })()}
 
-        {/* Find me — glowing pills */}
+        {/* Find me — glowing pills (Sunset-style left-aligned) */}
         {resolvedLinks.length > 0 && (
-          <section className="mt-16 text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.4em] text-cyan-300 mb-5">
+          <section className="mt-10">
+            <p className="text-xs font-black uppercase tracking-[0.4em] text-cyan-300 mb-4">
               Find Me
             </p>
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap gap-3">
               {resolvedLinks.map((link) => {
                 const cfg = getLinkTypeConfig(link.type);
                 return (
@@ -268,14 +273,14 @@ export default function NeonLayout({
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 backdrop-blur-xl pl-1.5 pr-4 py-1.5 hover:bg-white/10 hover:border-cyan-300/40 transition shadow-lg"
+                    className="group inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 backdrop-blur-xl pl-1.5 pr-5 py-1.5 hover:bg-white/10 hover:border-cyan-300/40 transition shadow-lg"
                   >
                     <LinkIcon type={link.type} size={32} />
                     <span className="flex flex-col items-start leading-tight">
-                      <span className="text-[10px] uppercase tracking-wider text-cyan-300/80 font-semibold">
+                      <span className="text-[10px] uppercase tracking-wider text-cyan-300/80 font-bold">
                         {cfg.shortLabel}
                       </span>
-                      <span className="text-sm font-semibold text-slate-100">
+                      <span className="text-sm font-black text-slate-100">
                         {link.label || cfg.label}
                       </span>
                     </span>
@@ -288,10 +293,10 @@ export default function NeonLayout({
 
         {/* Rates — glassmorphism card */}
         {hasAnyRate(ratesData) && (
-          <div className="mt-12">
+          <div className="mt-10">
             <RatesCard
               data={ratesData}
-              className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-5 py-5 sm:px-6 sm:py-5 shadow-2xl"
+              className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl px-5 py-5 sm:px-6 sm:py-5 shadow-2xl"
               headingClassName="text-xs font-bold uppercase tracking-[0.4em] text-cyan-300 mb-3"
               titleClassName="text-slate-100"
               descriptionClassName="text-slate-400"
@@ -303,25 +308,23 @@ export default function NeonLayout({
 
         {/* Portfolio — glassy cards */}
         {portfolioData.groups && portfolioData.groups.length > 0 && (
-          <section className="mt-16">
-            <header className="text-center mb-8">
-              <p className="text-xs font-bold uppercase tracking-[0.4em] text-cyan-300">
-                Portfolio
-              </p>
-            </header>
-            <div className="space-y-10">
+          <section className="mt-10">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-5 text-cyan-100">
+              Selected Work
+            </h2>
+            <div className="space-y-8">
               {portfolioData.groups.map((group) => {
                 const cfg = PLATFORMS[group.platform];
                 return (
                   <div key={group.id}>
-                    <div className="flex items-center gap-3 mb-4 justify-center sm:justify-start">
+                    <div className="flex items-center gap-3 mb-3">
                       <PlatformIcon platform={group.platform} size={36} />
                       <div>
-                        <h3 className="text-base font-bold text-slate-100 leading-tight">
+                        <h3 className="text-base font-black text-slate-100 leading-tight">
                           {cfg.label}
                         </h3>
                         {group.label && (
-                          <p className="text-xs text-slate-400 leading-tight">
+                          <p className="text-xs font-bold text-cyan-300/70 leading-tight">
                             {group.label}
                           </p>
                         )}
@@ -345,7 +348,7 @@ export default function NeonLayout({
           </section>
         )}
 
-        <footer className="mt-16 text-center text-xs uppercase tracking-[0.4em] text-cyan-300/60">
+        <footer className="mt-10 text-center text-xs uppercase tracking-[0.4em] text-cyan-300/60">
           Made with{" "}
           <Link href="/" className="text-cyan-300 hover:text-cyan-100">
             mycard.to

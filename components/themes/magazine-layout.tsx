@@ -57,7 +57,7 @@ export default function MagazineLayout({
     <main className="flex-1 bg-amber-50 font-sans text-slate-900">
       {/* Hero — compact editorial card */}
       <section className="border-b-4 border-slate-900">
-        <div className="mx-auto max-w-5xl px-6 py-6">
+        <div className="mx-auto max-w-[1400px] px-6 py-6">
           <p className="text-[10px] uppercase tracking-[0.4em] text-slate-600 font-semibold mb-3">
             Media Kit · No. 01
           </p>
@@ -159,7 +159,7 @@ export default function MagazineLayout({
         });
         return (
         <section className="border-b-4 border-slate-900 bg-slate-900 text-amber-50">
-          <div className="mx-auto max-w-6xl px-6 py-8">
+          <div className="mx-auto max-w-[1400px] px-6 py-8">
             <h2 className="font-serif text-2xl sm:text-3xl font-black tracking-tight mb-5">
               The Numbers
             </h2>
@@ -193,18 +193,21 @@ export default function MagazineLayout({
                       const filled = section.metrics.filter(
                         (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
                       );
+                      const gridCols = isCompact
+                        ? "grid-cols-2 sm:grid-cols-3"
+                        : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4";
                       return (
                         <div key={section.id}>
                           <p className="text-[10px] uppercase tracking-[0.25em] text-amber-200/60 mb-1.5">
                             {section.title}
                           </p>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
+                          <div className={`grid ${gridCols} gap-x-6 gap-y-3`}>
                             {filled.map((metric) => (
-                              <div key={metric.key}>
-                                <p className="text-[10px] uppercase tracking-wider text-amber-200/70">
+                              <div key={metric.key} className="min-w-0">
+                                <p className="text-[10px] uppercase tracking-wider text-amber-200/70 truncate">
                                   {metric.label}
                                 </p>
-                                <p className="font-serif text-2xl font-black tabular-nums mt-0.5">
+                                <p className="font-serif text-2xl font-black tabular-nums mt-0.5 truncate">
                                   {formatMetricValue(sectionData[metric.key], metric.format)}
                                 </p>
                               </div>
@@ -226,7 +229,7 @@ export default function MagazineLayout({
       {/* Find me — branded square tiles */}
       {resolvedLinks.length > 0 && (
         <section className="border-b-4 border-slate-900">
-          <div className="mx-auto max-w-6xl px-6 py-10">
+          <div className="mx-auto max-w-[1400px] px-6 py-10">
             <p className="text-xs uppercase tracking-[0.3em] font-bold mb-5 text-slate-700">
               Find Me Elsewhere
             </p>
@@ -256,7 +259,7 @@ export default function MagazineLayout({
       {/* Rates — editorial card */}
       {hasAnyRate(ratesData) && (
         <section className="border-b-4 border-slate-900">
-          <div className="mx-auto max-w-6xl px-6 py-8">
+          <div className="mx-auto max-w-[1400px] px-6 py-8">
             <RatesCard
               data={ratesData}
               className=""
@@ -273,7 +276,7 @@ export default function MagazineLayout({
       {/* Portfolio — bold group headers + clean video grid */}
       {portfolioData.groups && portfolioData.groups.length > 0 && (
         <section>
-          <div className="mx-auto max-w-6xl px-6 py-12 space-y-12">
+          <div className="mx-auto max-w-[1400px] px-6 py-12 space-y-12">
             <p className="text-xs uppercase tracking-[0.3em] font-bold text-slate-700">
               Selected Work
             </p>

@@ -56,7 +56,7 @@ export default function MinimalLayout({
   return (
     <main className="flex-1 bg-white text-slate-900">
       {/* Profile — compact horizontal card */}
-      <section className="mx-auto max-w-3xl px-6 pt-10 pb-8">
+      <section className="mx-auto max-w-[1400px] px-6 pt-10 pb-8">
         <div className="flex flex-row items-stretch gap-4 sm:gap-6">
           <div className="relative w-24 sm:w-32 shrink-0 self-stretch rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center text-2xl font-light text-slate-600 min-h-[120px]">
             {profileData.photo_url ? (
@@ -150,8 +150,8 @@ export default function MinimalLayout({
         });
         return (
         <section className="border-t border-slate-200">
-          <div className="mx-auto max-w-5xl px-6 py-8">
-            <div className="flex flex-wrap gap-x-8 gap-y-8">
+          <div className="mx-auto max-w-[1400px] px-6 py-8">
+            <div className="flex flex-wrap gap-4">
             {visibleGroups.map((group) => {
               const groupData = norm[group.id];
               const isAmazonCombined = group.id === "amazon" && combineAmazon;
@@ -164,35 +164,38 @@ export default function MinimalLayout({
               return (
                 <div
                   key={group.id}
-                  className={isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}
+                  className={
+                    "rounded-2xl border border-slate-200 bg-white px-5 py-5 " +
+                    (isCompact ? "flex-1 basis-[320px] min-w-[280px]" : "w-full")
+                  }
                 >
-                  <div className="text-center mb-4">
-                    <span className="text-[10px] uppercase tracking-[0.5em] text-slate-400">
+                  <div className="text-center mb-3">
+                    <span className="text-[10px] uppercase tracking-[0.4em] text-slate-500">
                       {group.label}
                     </span>
                     {groupData.timeframe && (
-                      <span className="ml-3 text-xs text-slate-500 font-light">
+                      <span className="ml-2 text-xs text-slate-500 font-light">
                         · {groupData.timeframe}
                       </span>
                     )}
                   </div>
-                  <div className="space-y-5">
+                  <div className="space-y-4">
                     {renderSections.map(({ section, data: sectionData }) => {
                       const filled = section.metrics.filter(
                         (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
                       );
                       return (
                         <div key={section.id}>
-                          <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400 text-center mb-3">
+                          <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400 text-center mb-2 pb-2 border-b border-slate-100">
                             {section.title}
                           </p>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5 text-center">
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-center">
                             {filled.map((metric) => (
-                              <div key={metric.key}>
-                                <p className="text-2xl sm:text-3xl font-extralight tabular-nums tracking-tight">
+                              <div key={metric.key} className="min-w-0">
+                                <p className="text-xl sm:text-2xl font-extralight tabular-nums tracking-tight truncate">
                                   {formatMetricValue(sectionData[metric.key], metric.format)}
                                 </p>
-                                <p className="mt-1 text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                                <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-slate-500 truncate">
                                   {metric.label}
                                 </p>
                               </div>
@@ -214,7 +217,7 @@ export default function MinimalLayout({
       {/* Find me — text links with subtle icons */}
       {resolvedLinks.length > 0 && (
         <section className="border-t border-slate-200">
-          <div className="mx-auto max-w-3xl px-6 py-8 text-center">
+          <div className="mx-auto max-w-[1400px] px-6 py-8 text-center">
             <p className="text-[10px] uppercase tracking-[0.5em] text-slate-400 mb-6">
               Elsewhere
             </p>
@@ -244,7 +247,7 @@ export default function MinimalLayout({
       {/* Rates — clean hairlines */}
       {hasAnyRate(ratesData) && (
         <section className="border-t border-slate-200">
-          <div className="mx-auto max-w-3xl px-6 py-8">
+          <div className="mx-auto max-w-[1400px] px-6 py-8">
             <RatesCard
               data={ratesData}
               className=""
@@ -261,7 +264,7 @@ export default function MinimalLayout({
       {/* Portfolio — clean grid no chrome */}
       {portfolioData.groups && portfolioData.groups.length > 0 && (
         <section className="border-t border-slate-200">
-          <div className="mx-auto max-w-6xl px-6 py-10 space-y-8">
+          <div className="mx-auto max-w-[1400px] px-6 py-10 space-y-8">
             <p className="text-[10px] uppercase tracking-[0.5em] text-slate-400 text-center">
               Work
             </p>

@@ -61,7 +61,7 @@ export default function SunsetLayout({
           "linear-gradient(135deg, #fed7aa 0%, #fda4af 35%, #f0abfc 70%, #fde68a 100%)",
       }}
     >
-      <div className="mx-auto max-w-5xl px-6 py-10">
+      <div className="mx-auto max-w-[1400px] px-6 py-10">
         {/* Profile — compact horizontal card */}
         <section className="rounded-3xl bg-white/60 backdrop-blur px-5 py-5 sm:px-7 sm:py-6 shadow-xl">
           <div className="flex flex-row items-stretch gap-4 sm:gap-6">
