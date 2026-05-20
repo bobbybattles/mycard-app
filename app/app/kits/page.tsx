@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { checkProStatus, canCreateAnotherKit } from "@/lib/subscription";
 import type { Kit } from "@/lib/kits";
 
 export const dynamic = "force-dynamic";
 
 // List of all the signed-in user's media kits.
 // Click one to edit, or "+ New kit" to create another (blank or duplicated).
+// Free plan = 1 kit max, Pro plan (from Oink subscription) = 10 kits max.
 export default async function KitsListPage() {
   const supabase = await createClient();
   const {
@@ -29,6 +31,10 @@ export default async function KitsListPage() {
 
   const kitList = (kits ?? []) as Pick<Kit, "id" | "slug" | "name" | "is_published" | "updated_at" | "created_at">[];
 
+  // Pro check — gates kit creation. Failure modes default to free (kitLimit=1).
+  const status = await checkProStatus(user.email);
+  const canCreate = canCreateAnotherKit(kitList.length, status);
+
   return (
     <main className="flex-1 px-6 py-10 bg-slate-50">
       <div className="mx-auto max-w-3xl">
@@ -40,12 +46,53 @@ export default async function KitsListPage() {
               URL.
             </p>
           </div>
-          <Link
-            href="/app/kits/new"
-            className="rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700 transition"
-          >
-            + New kit
-          </Link>
+          {canCreate ? (
+            <Link
+              href="/app/kits/new"
+              className="rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700 transition"
+            >
+              + New kit
+            </Link>
+          ) : (
+            <span
+              title={
+                status.isPro
+                  ? `Pro plan: ${status.kitLimit} kits max`
+                  : "Free plan: 1 kit. Upgrade to Oink Pro for up to 10."
+              }
+              className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-500 cursor-not-allowed"
+            >
+              + New kit
+            </span>
+          )}
+        </div>
+
+        {/* Plan / usage banner */}
+        <div
+          className={`mb-5 rounded-xl border px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-3 ${
+            status.isPro
+              ? "border-pink-200 bg-pink-50 text-pink-900"
+              : "border-slate-200 bg-white text-slate-700"
+          }`}
+        >
+          <div>
+            <span className="font-semibold">
+              {status.isPro ? "Oink Pro" : "Free plan"}
+            </span>
+            <span className="ml-2 text-slate-600">
+              {kitList.length} of {status.kitLimit} kits used
+            </span>
+          </div>
+          {!status.isPro && (
+            <a
+              href="https://www.oinkforinfluencers.com/pricing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg bg-pink-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-pink-700"
+            >
+              Upgrade to Pro for 10 kits →
+            </a>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -93,15 +140,42 @@ export default async function KitsListPage() {
             </div>
           ))}
 
-          <Link
-            href="/app/kits/new"
-            className="rounded-xl border-2 border-dashed border-slate-300 p-5 flex flex-col items-center justify-center text-slate-500 hover:border-pink-400 hover:text-pink-700 hover:bg-pink-50 transition min-h-[180px]"
-          >
-            <span className="text-3xl mb-1" aria-hidden>
-              +
-            </span>
-            <span className="text-sm font-semibold">New kit</span>
-          </Link>
+          {canCreate ? (
+            <Link
+              href="/app/kits/new"
+              className="rounded-xl border-2 border-dashed border-slate-300 p-5 flex flex-col items-center justify-center text-slate-500 hover:border-pink-400 hover:text-pink-700 hover:bg-pink-50 transition min-h-[180px]"
+            >
+              <span className="text-3xl mb-1" aria-hidden>
+                +
+              </span>
+              <span className="text-sm font-semibold">New kit</span>
+            </Link>
+          ) : (
+            <div className="rounded-xl border-2 border-dashed border-slate-200 p-5 flex flex-col items-center justify-center text-center min-h-[180px]">
+              <span className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-2">
+                Limit reached
+              </span>
+              {status.isPro ? (
+                <p className="text-sm text-slate-500">
+                  You&apos;ve used all {status.kitLimit} of your Pro kit slots.
+                </p>
+              ) : (
+                <>
+                  <p className="text-sm text-slate-600 mb-3">
+                    Free plan includes 1 kit. Upgrade to Oink Pro for up to 10.
+                  </p>
+                  <a
+                    href="https://www.oinkforinfluencers.com/pricing"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg bg-pink-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-pink-700"
+                  >
+                    Upgrade to Pro →
+                  </a>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </main>
