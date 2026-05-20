@@ -4,6 +4,11 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+// Google sign-in is hidden until the Google OAuth provider is enabled in
+// the Supabase dashboard (Authentication → Providers → Google). Flip this
+// to true once that is configured to bring the button back.
+const GOOGLE_ENABLED = false;
+
 type Mode = "sign-in" | "sign-up";
 
 // Shared auth form used by /login and /signup.
@@ -74,25 +79,31 @@ export default function AuthForm({ mode }: { mode: Mode }) {
 
   return (
     <div className="space-y-4">
-      <button
-        type="button"
-        onClick={handleGoogle}
-        disabled={loading !== null}
-        className="w-full inline-flex items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-      >
-        <GoogleIcon />
-        {loading === "google"
-          ? "Redirecting…"
-          : mode === "sign-up"
-            ? "Continue with Google"
-            : "Sign in with Google"}
-      </button>
+      {/* Google sign-in + the "or" divider — hidden via GOOGLE_ENABLED
+          until the Google provider is enabled in Supabase. */}
+      {GOOGLE_ENABLED && (
+        <>
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={loading !== null}
+            className="w-full inline-flex items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            <GoogleIcon />
+            {loading === "google"
+              ? "Redirecting…"
+              : mode === "sign-up"
+                ? "Continue with Google"
+                : "Sign in with Google"}
+          </button>
 
-      <div className="flex items-center gap-3">
-        <div className="h-px flex-1 bg-slate-200" />
-        <span className="text-xs text-slate-500 uppercase tracking-wide">or</span>
-        <div className="h-px flex-1 bg-slate-200" />
-      </div>
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs text-slate-500 uppercase tracking-wide">or</span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+        </>
+      )}
 
       <form onSubmit={handleEmail} className="space-y-3">
         <input
