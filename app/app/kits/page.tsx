@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { checkProStatus, canCreateAnotherKit } from "@/lib/subscription";
+import OinkEmailForm from "@/components/kits/oink-email-form";
 import type { Kit } from "@/lib/kits";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export default async function KitsListPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("username")
+    .select("username, oink_email")
     .eq("id", user.id)
     .single();
   if (!profile?.username) redirect("/app/onboarding");
@@ -31,8 +32,11 @@ export default async function KitsListPage() {
 
   const kitList = (kits ?? []) as Pick<Kit, "id" | "slug" | "name" | "is_published" | "updated_at" | "created_at">[];
 
-  // Pro check — gates kit creation. Failure modes default to free (kitLimit=1).
-  const status = await checkProStatus(user.email);
+  // Pro check uses the Oink subscription email if the user has set one,
+  // otherwise falls back to the auth email. Failure modes default to free.
+  const oinkEmail = (profile as { oink_email?: string | null } | null)?.oink_email ?? null;
+  const effectiveEmail = oinkEmail || user.email || "";
+  const status = await checkProStatus(effectiveEmail);
   const canCreate = canCreateAnotherKit(kitList.length, status);
 
   return (
@@ -66,6 +70,15 @@ export default async function KitsListPage() {
             </span>
           )}
         </div>
+
+        {/* Oink subscription email — separate from the signup email so users
+            can match up their Pro account if they used a different email. */}
+        <OinkEmailForm
+          userId={user.id}
+          initialOinkEmail={oinkEmail ?? ""}
+          signupEmail={user.email ?? ""}
+          isPro={status.isPro}
+        />
 
         {/* Plan / usage banner */}
         <div

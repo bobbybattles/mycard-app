@@ -22,8 +22,18 @@ export default async function NewKitPage() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: true });
 
+  // Pull the user's saved Oink subscription email (if any) so we can verify
+  // them as Pro using that instead of their signup email.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("oink_email")
+    .eq("id", user.id)
+    .single();
+  const oinkEmail = (profile as { oink_email?: string | null } | null)?.oink_email ?? null;
+  const effectiveEmail = oinkEmail || user.email || "";
+
   const existing = kits ?? [];
-  const status = await checkProStatus(user.email);
+  const status = await checkProStatus(effectiveEmail);
   const canCreate = canCreateAnotherKit(existing.length, status);
 
   // Hit limit by URL? Show an upgrade screen instead of the form.
