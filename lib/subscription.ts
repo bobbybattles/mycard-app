@@ -66,8 +66,10 @@ export async function checkProStatus(email: string | null | undefined): Promise<
       return { isPro: false, kitLimit: FREE_KIT_LIMIT };
     }
 
-    const json = (await res.json()) as { isPro?: boolean };
-    const isPro = json.isPro === true;
+    // The Render endpoint returns { active: true|false } — accept `isPro`
+    // too in case the schema ever changes.
+    const json = (await res.json()) as { active?: boolean; isPro?: boolean };
+    const isPro = json.active === true || json.isPro === true;
     cache.set(normalized, { isPro, ts: Date.now() });
     return { isPro, kitLimit: isPro ? PRO_KIT_LIMIT : FREE_KIT_LIMIT };
   } catch {
