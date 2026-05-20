@@ -53,7 +53,7 @@ export default async function NewKitPage() {
             </h1>
             <p className="mt-3 text-slate-700">
               {status.isPro
-                ? `Your Oink Pro plan includes up to ${status.kitLimit} media kits, and you've used them all. Delete one to free up a slot.`
+                ? `Your Oink Pro plan includes up to ${status.kitLimit} media kits, and you've used them all. Contact us to free up a slot.`
                 : `The free plan includes 1 media kit. Upgrade to Oink Pro for up to ${status.kitLimit} kits, plus all the extension features.`}
             </p>
             {!status.isPro && (
