@@ -7,12 +7,15 @@ import { hasAnyRate, type RatesCardData } from "@/lib/rates";
 import type { ProfileLink } from "@/lib/links";
 import {
   PLATFORM_GROUPS,
+  AMAZON_COMBINED_SECTION,
   formatMetricValue,
   getSectionMetrics,
   groupHasAnyMetric,
   hasAnyMetric,
   normalizeMetrics,
   sectionHasAnyMetric,
+  computeCombinedAmazon,
+  combinedAmazonHasAnyMetric,
 } from "@/lib/metrics-schema";
 import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
@@ -137,15 +140,27 @@ export default function MinimalLayout({
       </section>
 
       {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
-      {hasAnyMetric(metricsData) && (
+      {hasAnyMetric(metricsData) && (() => {
+        const combineAmazon = !!metricsData.combine_amazon;
+        const norm = normalizeMetrics(metricsData);
+        const visibleGroups = PLATFORM_GROUPS.filter((g) => {
+          if (g.id === "amazon" && combineAmazon)
+            return combinedAmazonHasAnyMetric(norm.amazon);
+          return groupHasAnyMetric(norm[g.id], g);
+        });
+        return (
         <section className="border-t border-slate-200">
           <div className="mx-auto max-w-5xl px-6 py-8">
             <div className="flex flex-wrap gap-x-8 gap-y-8">
-            {PLATFORM_GROUPS.filter((g) =>
-              groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
-            ).map((group) => {
-              const groupData = normalizeMetrics(metricsData)[group.id];
-              const isCompact = group.sections.length === 1;
+            {visibleGroups.map((group) => {
+              const groupData = norm[group.id];
+              const isAmazonCombined = group.id === "amazon" && combineAmazon;
+              const renderSections = isAmazonCombined
+                ? [{ section: AMAZON_COMBINED_SECTION, data: computeCombinedAmazon(groupData) }]
+                : group.sections
+                    .filter((s) => sectionHasAnyMetric(groupData, s.id, s))
+                    .map((s) => ({ section: s, data: getSectionMetrics(groupData, s.id) ?? {} }));
+              const isCompact = isAmazonCombined || group.sections.length === 1;
               return (
                 <div
                   key={group.id}
@@ -162,33 +177,30 @@ export default function MinimalLayout({
                     )}
                   </div>
                   <div className="space-y-5">
-                    {group.sections
-                      .filter((s) => sectionHasAnyMetric(groupData, s.id, s))
-                      .map((section) => {
-                        const sectionData = getSectionMetrics(groupData, section.id) ?? {};
-                        const filled = section.metrics.filter(
-                          (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
-                        );
-                        return (
-                          <div key={section.id}>
-                            <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400 text-center mb-3">
-                              {section.title}
-                            </p>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5 text-center">
-                              {filled.map((metric) => (
-                                <div key={metric.key}>
-                                  <p className="text-2xl sm:text-3xl font-extralight tabular-nums tracking-tight">
-                                    {formatMetricValue(sectionData[metric.key], metric.format)}
-                                  </p>
-                                  <p className="mt-1 text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                                    {metric.label}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
+                    {renderSections.map(({ section, data: sectionData }) => {
+                      const filled = section.metrics.filter(
+                        (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
+                      );
+                      return (
+                        <div key={section.id}>
+                          <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400 text-center mb-3">
+                            {section.title}
+                          </p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5 text-center">
+                            {filled.map((metric) => (
+                              <div key={metric.key}>
+                                <p className="text-2xl sm:text-3xl font-extralight tabular-nums tracking-tight">
+                                  {formatMetricValue(sectionData[metric.key], metric.format)}
+                                </p>
+                                <p className="mt-1 text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                                  {metric.label}
+                                </p>
+                              </div>
+                            ))}
                           </div>
-                        );
-                      })}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -196,7 +208,8 @@ export default function MinimalLayout({
             </div>
           </div>
         </section>
-      )}
+        );
+      })()}
 
       {/* Find me — text links with subtle icons */}
       {resolvedLinks.length > 0 && (

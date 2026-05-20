@@ -7,12 +7,15 @@ import { hasAnyRate, type RatesCardData } from "@/lib/rates";
 import type { ProfileLink } from "@/lib/links";
 import {
   PLATFORM_GROUPS,
+  AMAZON_COMBINED_SECTION,
   formatMetricValue,
   getSectionMetrics,
   groupHasAnyMetric,
   hasAnyMetric,
   normalizeMetrics,
   sectionHasAnyMetric,
+  computeCombinedAmazon,
+  combinedAmazonHasAnyMetric,
 } from "@/lib/metrics-schema";
 import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
@@ -146,18 +149,30 @@ export default function MagazineLayout({
       </section>
 
       {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
-      {hasAnyMetric(metricsData) && (
+      {hasAnyMetric(metricsData) && (() => {
+        const combineAmazon = !!metricsData.combine_amazon;
+        const norm = normalizeMetrics(metricsData);
+        const visibleGroups = PLATFORM_GROUPS.filter((g) => {
+          if (g.id === "amazon" && combineAmazon)
+            return combinedAmazonHasAnyMetric(norm.amazon);
+          return groupHasAnyMetric(norm[g.id], g);
+        });
+        return (
         <section className="border-b-4 border-slate-900 bg-slate-900 text-amber-50">
           <div className="mx-auto max-w-6xl px-6 py-8">
             <h2 className="font-serif text-2xl sm:text-3xl font-black tracking-tight mb-5">
               The Numbers
             </h2>
             <div className="flex flex-wrap gap-x-6 gap-y-6">
-            {PLATFORM_GROUPS.filter((g) =>
-              groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
-            ).map((group) => {
-              const groupData = normalizeMetrics(metricsData)[group.id];
-              const isCompact = group.sections.length === 1;
+            {visibleGroups.map((group) => {
+              const groupData = norm[group.id];
+              const isAmazonCombined = group.id === "amazon" && combineAmazon;
+              const renderSections = isAmazonCombined
+                ? [{ section: AMAZON_COMBINED_SECTION, data: computeCombinedAmazon(groupData) }]
+                : group.sections
+                    .filter((s) => sectionHasAnyMetric(groupData, s.id, s))
+                    .map((s) => ({ section: s, data: getSectionMetrics(groupData, s.id) ?? {} }));
+              const isCompact = isAmazonCombined || group.sections.length === 1;
               return (
                 <div
                   key={group.id}
@@ -174,33 +189,30 @@ export default function MagazineLayout({
                     )}
                   </div>
                   <div className="space-y-3">
-                    {group.sections
-                      .filter((s) => sectionHasAnyMetric(groupData, s.id, s))
-                      .map((section) => {
-                        const sectionData = getSectionMetrics(groupData, section.id) ?? {};
-                        const filled = section.metrics.filter(
-                          (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
-                        );
-                        return (
-                          <div key={section.id}>
-                            <p className="text-[10px] uppercase tracking-[0.25em] text-amber-200/60 mb-1.5">
-                              {section.title}
-                            </p>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
-                              {filled.map((metric) => (
-                                <div key={metric.key}>
-                                  <p className="text-[10px] uppercase tracking-wider text-amber-200/70">
-                                    {metric.label}
-                                  </p>
-                                  <p className="font-serif text-2xl font-black tabular-nums mt-0.5">
-                                    {formatMetricValue(sectionData[metric.key], metric.format)}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
+                    {renderSections.map(({ section, data: sectionData }) => {
+                      const filled = section.metrics.filter(
+                        (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
+                      );
+                      return (
+                        <div key={section.id}>
+                          <p className="text-[10px] uppercase tracking-[0.25em] text-amber-200/60 mb-1.5">
+                            {section.title}
+                          </p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
+                            {filled.map((metric) => (
+                              <div key={metric.key}>
+                                <p className="text-[10px] uppercase tracking-wider text-amber-200/70">
+                                  {metric.label}
+                                </p>
+                                <p className="font-serif text-2xl font-black tabular-nums mt-0.5">
+                                  {formatMetricValue(sectionData[metric.key], metric.format)}
+                                </p>
+                              </div>
+                            ))}
                           </div>
-                        );
-                      })}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -208,7 +220,8 @@ export default function MagazineLayout({
             </div>
           </div>
         </section>
-      )}
+        );
+      })()}
 
       {/* Find me — branded square tiles */}
       {resolvedLinks.length > 0 && (

@@ -25,61 +25,57 @@ export type MetricSection = {
 };
 
 // =========================================================================
-// Amazon — the existing three sub-sections.
+// Amazon — Offsite + Onsite. Each section shares the same metric shape so
+// they can be combined into a single "Amazon Performance" card when the
+// creator prefers a denser layout.
 // =========================================================================
+
+const AMAZON_PERFORMANCE_METRICS: MetricDef[] = [
+  { key: "clicks", label: "Clicks", placeholder: "2,058", format: "number" },
+  { key: "conversion", label: "Conversion", placeholder: "5.49%", format: "percent" },
+  { key: "shipped_items", label: "Shipped Items", placeholder: "107", format: "number" },
+  { key: "total_revenue", label: "Total Revenue", placeholder: "$4,593.75", format: "currency" },
+  { key: "bonus", label: "Bonus", placeholder: "$0.00", format: "currency" },
+  {
+    key: "total_earnings",
+    label: "Total Earnings",
+    hint: "Includes Bonus",
+    placeholder: "$120.03",
+    format: "currency",
+  },
+];
+
 export const AMAZON_SECTIONS: MetricSection[] = [
   {
     id: "offsite",
     title: "Offsite",
-    metrics: [
-      { key: "clicks", label: "Clicks", placeholder: "2,058", format: "number" },
-      { key: "ordered_items", label: "Ordered Items", placeholder: "113", format: "number" },
-      { key: "conversion", label: "Conversion", placeholder: "5.49%", format: "percent" },
-      { key: "ordered_revenue", label: "Ordered Revenue", placeholder: "$5,880.73", format: "currency" },
-      { key: "shipped_items", label: "Shipped Items", placeholder: "107", format: "number" },
-      { key: "returned_items", label: "Returned Items", placeholder: "6", format: "number" },
-      { key: "total_revenue", label: "Total Revenue", placeholder: "$4,593.75", format: "currency" },
-      { key: "bonus", label: "Bonus", placeholder: "$0.00", format: "currency" },
-      {
-        key: "total_earnings",
-        label: "Total Earnings",
-        hint: "Includes Bonus",
-        placeholder: "$120.03",
-        format: "currency",
-      },
-    ],
+    metrics: AMAZON_PERFORMANCE_METRICS,
   },
   {
     id: "onsite",
     title: "Onsite",
-    metrics: [
-      { key: "clicks", label: "Clicks", placeholder: "133,521", format: "number" },
-      { key: "conversion", label: "Conversion", placeholder: "4.06%", format: "percent" },
-      { key: "shipped_items", label: "Shipped Items", placeholder: "5,415", format: "number" },
-      { key: "returned_items", label: "Returned Items", placeholder: "147", format: "number" },
-      { key: "total_revenue", label: "Total Revenue", placeholder: "$201,156.26", format: "currency" },
-      { key: "bonus", label: "Bonus", placeholder: "$0.00", format: "currency" },
-      {
-        key: "total_earnings",
-        label: "Total Earnings",
-        hint: "Includes Bonus",
-        placeholder: "$2,905.80",
-        format: "currency",
-      },
-    ],
-  },
-  {
-    id: "creator_connections",
-    title: "Creator Connections",
-    metrics: [
-      { key: "connection_earnings", label: "Connection earnings", placeholder: "$32,473.39", format: "currency" },
-      { key: "connection_revenue", label: "Connection revenue", placeholder: "$254,632.43", format: "currency" },
-      { key: "total_clicks", label: "Total clicks", placeholder: "48,843", format: "number" },
-      { key: "total_orders", label: "Total orders", placeholder: "4,914", format: "number" },
-      { key: "shipped_items", label: "Shipped items", placeholder: "5,026", format: "number" },
-    ],
+    metrics: AMAZON_PERFORMANCE_METRICS.map((m) =>
+      m.key === "clicks"
+        ? { ...m, placeholder: "133,521" }
+        : m.key === "conversion"
+        ? { ...m, placeholder: "4.06%" }
+        : m.key === "shipped_items"
+        ? { ...m, placeholder: "5,415" }
+        : m.key === "total_revenue"
+        ? { ...m, placeholder: "$201,156.26" }
+        : m.key === "total_earnings"
+        ? { ...m, placeholder: "$2,905.80" }
+        : m
+    ),
   },
 ];
+
+/** Single combined card definition (used when combine_amazon is true). */
+export const AMAZON_COMBINED_SECTION: MetricSection = {
+  id: "amazon_performance",
+  title: "Amazon Performance",
+  metrics: AMAZON_PERFORMANCE_METRICS,
+};
 
 // =========================================================================
 // TikTok Shop — one section with the four standard creator-side metrics.
@@ -139,7 +135,6 @@ export type PlatformGroupData = {
   timeframe?: string;
   offsite?: Record<MetricKey, string>;
   onsite?: Record<MetricKey, string>;
-  creator_connections?: Record<MetricKey, string>;
   shop?: Record<MetricKey, string>;
   channel?: Record<MetricKey, string>;
 };
@@ -160,13 +155,18 @@ export type MetricsCardData = {
   amazon?: PlatformGroupData;
   tiktok_shop?: PlatformGroupData;
   youtube?: PlatformGroupData;
+  /**
+   * When true, the public kit shows a single combined "Amazon Performance"
+   * card instead of separate Offsite + Onsite cards. The Offsite/Onsite
+   * values are summed (or averaged for conversion).
+   */
+  combine_amazon?: boolean;
 
   // -------- LEGACY (pre-platform-groups) — read-only for backward compat. --------
   /** Old global timeframe — treated as the Amazon timeframe when migrating. */
   timeframe?: string;
   offsite?: Record<MetricKey, string>;
   onsite?: Record<MetricKey, string>;
-  creator_connections?: Record<MetricKey, string>;
 };
 
 /** Common timeframe presets shown in the editor dropdown. */
@@ -199,7 +199,6 @@ export function normalizeMetrics(
         timeframe: d.timeframe,
         offsite: d.offsite,
         onsite: d.onsite,
-        creator_connections: d.creator_connections,
       };
   const tiktok_shop: PlatformGroupData = d.tiktok_shop ?? {};
   const youtube: PlatformGroupData = d.youtube ?? {};
@@ -279,3 +278,72 @@ export function formatMetricValue(value: string, format: MetricFormat): string {
 // -------- Re-exports for backward compat with files that still import them. --------
 /** @deprecated Use AMAZON_SECTIONS or iterate PLATFORM_GROUPS. */
 export const METRIC_SECTIONS = AMAZON_SECTIONS;
+
+// =========================================================================
+// Combined Amazon Performance computation.
+// Sums Offsite + Onsite for clicks / shipped_items / total_revenue / bonus /
+// total_earnings, and averages the two conversion rates.
+// =========================================================================
+
+/** Parse a free-text metric value (strips $, %, commas) into a number, or null. */
+function parseMetricNumber(raw: string | undefined): number | null {
+  if (!raw) return null;
+  const cleaned = raw.trim().replace(/[$,%\s]/g, "");
+  if (!cleaned) return null;
+  const n = parseFloat(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Format a number back to a string the metric formatter can render. */
+function numToString(n: number): string {
+  if (Number.isInteger(n)) return String(n);
+  // Trim trailing zeros but keep up to 2 decimals.
+  return n.toFixed(2).replace(/\.?0+$/, "");
+}
+
+/**
+ * Compute the combined Amazon Performance metric values from Offsite + Onsite.
+ * Returns a Record<metricKey, string> ready to be rendered by formatMetricValue.
+ */
+export function computeCombinedAmazon(
+  groupData: PlatformGroupData
+): Record<MetricKey, string> {
+  const offsite = groupData.offsite ?? {};
+  const onsite = groupData.onsite ?? {};
+
+  const sumKey = (key: string): string | undefined => {
+    const a = parseMetricNumber(offsite[key]);
+    const b = parseMetricNumber(onsite[key]);
+    if (a === null && b === null) return undefined;
+    return numToString((a ?? 0) + (b ?? 0));
+  };
+
+  const avgKey = (key: string): string | undefined => {
+    const a = parseMetricNumber(offsite[key]);
+    const b = parseMetricNumber(onsite[key]);
+    if (a === null && b === null) return undefined;
+    if (a === null) return numToString(b as number);
+    if (b === null) return numToString(a);
+    return numToString((a + b) / 2);
+  };
+
+  const out: Record<MetricKey, string> = {};
+  const clicks = sumKey("clicks");
+  const conv = avgKey("conversion");
+  const shipped = sumKey("shipped_items");
+  const revenue = sumKey("total_revenue");
+  const bonus = sumKey("bonus");
+  const earnings = sumKey("total_earnings");
+  if (clicks !== undefined) out.clicks = clicks;
+  if (conv !== undefined) out.conversion = conv;
+  if (shipped !== undefined) out.shipped_items = shipped;
+  if (revenue !== undefined) out.total_revenue = revenue;
+  if (bonus !== undefined) out.bonus = bonus;
+  if (earnings !== undefined) out.total_earnings = earnings;
+  return out;
+}
+
+/** True if computed combined Amazon has any non-empty metric. */
+export function combinedAmazonHasAnyMetric(groupData: PlatformGroupData): boolean {
+  return Object.keys(computeCombinedAmazon(groupData)).length > 0;
+}

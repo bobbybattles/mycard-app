@@ -1,11 +1,16 @@
 import {
   PLATFORM_GROUPS,
+  AMAZON_COMBINED_SECTION,
   formatMetricValue,
   getSectionMetrics,
   groupHasAnyMetric,
   normalizeMetrics,
   sectionHasAnyMetric,
+  computeCombinedAmazon,
+  combinedAmazonHasAnyMetric,
   type MetricsCardData,
+  type MetricSection,
+  type MetricKey,
   type PlatformGroupConfig,
   type PlatformGroupData,
 } from "@/lib/metrics-schema";
@@ -15,24 +20,35 @@ type Props = {
 };
 
 // Public render of the Metrics card (Classic theme).
-// Wide platform groups (multi-section, e.g. Amazon) render full-width.
-// Compact platform groups (single-section, e.g. TikTok Shop, YouTube)
-// render side-by-side on desktop so the page stays dense.
+// When combine_amazon is on, Amazon is rendered as a single compact card so
+// Amazon Performance + TikTok + YouTube can all sit on the same row.
 export default function MetricsCard({ data }: Props) {
   const norm = normalizeMetrics(data);
-  const visibleGroups = PLATFORM_GROUPS.filter((g) => groupHasAnyMetric(norm[g.id], g));
+  const combineAmazon = !!data.combine_amazon;
+
+  const visibleGroups = PLATFORM_GROUPS.filter((g) => {
+    if (g.id === "amazon" && combineAmazon) {
+      return combinedAmazonHasAnyMetric(norm.amazon);
+    }
+    return groupHasAnyMetric(norm[g.id], g);
+  });
   if (visibleGroups.length === 0) return null;
 
   return (
     <div className="flex flex-wrap gap-x-5 gap-y-6">
       {visibleGroups.map((group) => {
-        const isCompact = group.sections.length === 1;
+        const isAmazonCombined = group.id === "amazon" && combineAmazon;
+        const isCompact = isAmazonCombined || group.sections.length === 1;
         return (
           <div
             key={group.id}
             className={isCompact ? "flex-1 basis-[360px] min-w-[300px]" : "w-full"}
           >
-            <PlatformGroupBlock group={group} groupData={norm[group.id]} />
+            <PlatformGroupBlock
+              group={group}
+              groupData={norm[group.id]}
+              combined={isAmazonCombined}
+            />
           </div>
         );
       })}
@@ -43,14 +59,27 @@ export default function MetricsCard({ data }: Props) {
 function PlatformGroupBlock({
   group,
   groupData,
+  combined,
 }: {
   group: PlatformGroupConfig;
   groupData: PlatformGroupData;
+  combined: boolean;
 }) {
-  const visibleSections = group.sections.filter((s) =>
-    sectionHasAnyMetric(groupData, s.id, s)
-  );
-  if (visibleSections.length === 0) return null;
+  let renderSections: { section: MetricSection; data: Record<MetricKey, string> }[];
+
+  if (combined) {
+    renderSections = [
+      {
+        section: AMAZON_COMBINED_SECTION,
+        data: computeCombinedAmazon(groupData),
+      },
+    ];
+  } else {
+    renderSections = group.sections
+      .filter((s) => sectionHasAnyMetric(groupData, s.id, s))
+      .map((s) => ({ section: s, data: getSectionMetrics(groupData, s.id) ?? {} }));
+  }
+  if (renderSections.length === 0) return null;
 
   return (
     <section>
@@ -66,8 +95,7 @@ function PlatformGroupBlock({
       </header>
 
       <div className="flex flex-wrap justify-center gap-4">
-        {visibleSections.map((section) => {
-          const sectionData = getSectionMetrics(groupData, section.id) ?? {};
+        {renderSections.map(({ section, data: sectionData }) => {
           const filled = section.metrics.filter(
             (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
           );

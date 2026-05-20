@@ -7,12 +7,15 @@ import { hasAnyRate, type RatesCardData } from "@/lib/rates";
 import type { ProfileLink } from "@/lib/links";
 import {
   PLATFORM_GROUPS,
+  AMAZON_COMBINED_SECTION,
   formatMetricValue,
   getSectionMetrics,
   groupHasAnyMetric,
   hasAnyMetric,
   normalizeMetrics,
   sectionHasAnyMetric,
+  computeCombinedAmazon,
+  combinedAmazonHasAnyMetric,
 } from "@/lib/metrics-schema";
 import { getLinkTypeConfig } from "@/lib/links";
 import { PLATFORMS } from "@/lib/platforms";
@@ -171,16 +174,25 @@ export default function NeonLayout({
         </section>
 
         {/* Performance — wide platforms full-width; single-section platforms side-by-side */}
-        {hasAnyMetric(metricsData) && (
+        {hasAnyMetric(metricsData) && (() => {
+          const combineAmazon = !!metricsData.combine_amazon;
+          const norm = normalizeMetrics(metricsData);
+          const visibleGroups = PLATFORM_GROUPS.filter((g) => {
+            if (g.id === "amazon" && combineAmazon)
+              return combinedAmazonHasAnyMetric(norm.amazon);
+            return groupHasAnyMetric(norm[g.id], g);
+          });
+          return (
           <section className="mt-6 flex flex-wrap gap-x-5 gap-y-6">
-            {PLATFORM_GROUPS.filter((g) =>
-              groupHasAnyMetric(normalizeMetrics(metricsData)[g.id], g)
-            ).map((group) => {
-              const groupData = normalizeMetrics(metricsData)[group.id];
-              const visibleSections = group.sections.filter((s) =>
-                sectionHasAnyMetric(groupData, s.id, s)
-              );
-              const isCompact = group.sections.length === 1;
+            {visibleGroups.map((group) => {
+              const groupData = norm[group.id];
+              const isAmazonCombined = group.id === "amazon" && combineAmazon;
+              const renderSections = isAmazonCombined
+                ? [{ section: AMAZON_COMBINED_SECTION, data: computeCombinedAmazon(groupData) }]
+                : group.sections
+                    .filter((s) => sectionHasAnyMetric(groupData, s.id, s))
+                    .map((s) => ({ section: s, data: getSectionMetrics(groupData, s.id) ?? {} }));
+              const isCompact = isAmazonCombined || group.sections.length === 1;
               return (
                 <div
                   key={group.id}
@@ -197,8 +209,7 @@ export default function NeonLayout({
                     )}
                   </header>
                   <div className="flex flex-wrap justify-center gap-4">
-                    {visibleSections.map((section) => {
-                      const sectionData = getSectionMetrics(groupData, section.id) ?? {};
+                    {renderSections.map(({ section, data: sectionData }) => {
                       const filled = section.metrics.filter(
                         (m) => sectionData[m.key] && sectionData[m.key].trim().length > 0
                       );
@@ -239,7 +250,8 @@ export default function NeonLayout({
               );
             })}
           </section>
-        )}
+          );
+        })()}
 
         {/* Find me — glowing pills */}
         {resolvedLinks.length > 0 && (

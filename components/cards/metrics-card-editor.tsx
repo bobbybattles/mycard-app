@@ -89,6 +89,9 @@ export default function MetricsCardEditor({ kitId, card }: Props) {
   const [openSection, setOpenSection] = useState<string | null>(
     PLATFORM_GROUPS[0]?.sections[0]?.id ?? null
   );
+  const [combineAmazon, setCombineAmazon] = useState<boolean>(
+    card?.data.combine_amazon ?? false
+  );
   const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, startSave] = useTransition();
@@ -134,6 +137,7 @@ export default function MetricsCardEditor({ kitId, card }: Props) {
         data[group.id] = cleaned;
       }
     }
+    if (combineAmazon) data.combine_amazon = true;
 
     startSave(async () => {
       const { error } = await supabase.from("cards").upsert(
@@ -230,6 +234,29 @@ export default function MetricsCardEditor({ kitId, card }: Props) {
                     )}
                   </label>
                 </div>
+
+                {/* Combine toggle — Amazon only */}
+                {group.id === "amazon" && (
+                  <label className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={combineAmazon}
+                      onChange={(e) => setCombineAmazon(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-pink-600 focus:ring-pink-500"
+                    />
+                    <span className="text-sm text-slate-700">
+                      <span className="font-semibold text-slate-900">
+                        Combine into one Amazon Performance card
+                      </span>
+                      <span className="block text-xs text-slate-600 mt-0.5">
+                        On your public kit, Offsite + Onsite get summed (and
+                        Conversion averaged) into a single card. Saves vertical
+                        space and lets Amazon sit on the same row as TikTok and
+                        YouTube.
+                      </span>
+                    </span>
+                  </label>
+                )}
 
                 {/* Sections inside this platform group */}
                 {group.sections.map((section) => {
