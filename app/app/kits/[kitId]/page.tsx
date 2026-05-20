@@ -145,6 +145,14 @@ export default async function EditKitPage({
           <p className="mt-2 text-sm leading-relaxed text-slate-700">
             {"Oink does not automatically collect any of your sales data for confidentiality purposes. If you're not supposed to be sharing your sales data with brands or agents, you shouldn't be sharing it with Oink either. Although I realize this would make the process faster, I want to keep that degree of separation for your own protection. Please take 15 minutes to fill out the form below with your information. Update it once a month."}
           </p>
+          <a
+            href="https://youtu.be/nv70t4_xKZU"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-block text-sm font-semibold text-pink-700 underline hover:text-pink-900"
+          >
+            Watch the tutorial →
+          </a>
         </div>
 
         <KitSettingsEditor
