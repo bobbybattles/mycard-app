@@ -135,6 +135,18 @@ export default async function EditKitPage({
           )}
         </div>
 
+        {/* Data-confidentiality notice — shown on every kit's editor so
+            creators understand Oink never auto-collects their sales data
+            and that they fill everything in themselves on purpose. */}
+        <div className="rounded-2xl border border-pink-200 bg-pink-50 px-5 py-4">
+          <h2 className="text-sm font-bold text-pink-800">
+            A note on your data
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-slate-700">
+            {"Oink does not automatically collect any of your sales data for confidentiality purposes. If you're not supposed to be sharing your sales data with brands or agents, you shouldn't be sharing it with Oink either. Although I realize this would make the process faster, I want to keep that degree of separation for your own protection. Please take 15 minutes to fill out the form below with your information. Update it once a month."}
+          </p>
+        </div>
+
         <KitSettingsEditor
           kitId={kit.id}
           initialName={kit.name ?? ""}
