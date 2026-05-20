@@ -81,7 +81,7 @@ export default function MinimalLayout({
             )}
           </div>
 
-          <div className="flex-1 min-w-0 max-w-md">
+          <div className="flex-1 min-w-0">
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extralight tracking-tight">
               {displayName}
             </h1>
