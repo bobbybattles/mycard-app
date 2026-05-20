@@ -65,13 +65,13 @@ export default function MinimalLayout({
           }
         >
         <div className="flex flex-row items-start gap-4 sm:gap-6">
-          <div className="relative h-24 w-24 sm:h-32 sm:w-32 shrink-0 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center text-2xl font-light text-slate-600">
+          <div className="relative h-28 w-28 sm:h-48 sm:w-48 shrink-0 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center text-2xl font-light text-slate-600">
             {profileData.photo_url ? (
               <Image
                 src={profileData.photo_url}
                 alt={displayName}
                 fill
-                sizes="(min-width: 640px) 128px, 96px"
+                sizes="(min-width: 640px) 192px, 112px"
                 className="object-cover"
                 unoptimized
                 priority
@@ -81,7 +81,7 @@ export default function MinimalLayout({
             )}
           </div>
 
-          <div className="flex-1 min-w-0 max-w-2xl">
+          <div className="flex-1 min-w-0 max-w-md">
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extralight tracking-tight">
               {displayName}
             </h1>
