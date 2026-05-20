@@ -64,8 +64,8 @@ export default function MinimalLayout({
               : ""
           }
         >
-        <div className="flex flex-row items-stretch gap-4 sm:gap-6">
-          <div className="relative w-24 sm:w-32 shrink-0 self-stretch rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center text-2xl font-light text-slate-600 min-h-[120px]">
+        <div className="flex flex-row items-start gap-4 sm:gap-6">
+          <div className="relative h-24 w-24 sm:h-32 sm:w-32 shrink-0 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center text-2xl font-light text-slate-600">
             {profileData.photo_url ? (
               <Image
                 src={profileData.photo_url}
@@ -81,7 +81,7 @@ export default function MinimalLayout({
             )}
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 max-w-2xl">
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extralight tracking-tight">
               {displayName}
             </h1>
