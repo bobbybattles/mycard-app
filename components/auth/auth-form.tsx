@@ -47,7 +47,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
     setLoading("email");
 
     if (mode === "sign-up") {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -57,6 +57,15 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       setLoading(null);
       if (error) {
         setMessage({ kind: "error", text: error.message });
+        return;
+      }
+      // When email confirmation is disabled in Supabase, signUp returns an
+      // active session immediately — send the user straight into the app.
+      // When confirmation is enabled, no session is returned and the user
+      // must confirm via the emailed link first. This handles both states.
+      if (data.session) {
+        router.push(redirectTo);
+        router.refresh();
         return;
       }
       setMessage({
